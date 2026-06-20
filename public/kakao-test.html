@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>카카오맵 테스트</title>
+  <style>
+    body { margin: 0; }
+    #map { width: 100vw; height: 100vh; }
+    #status { position: fixed; top: 10px; left: 10px; background: white; padding: 10px; border-radius: 8px; font-size: 14px; z-index: 999; }
+  </style>
+</head>
+<body>
+  <div id="status">⏳ 로딩 중...</div>
+  <div id="map"></div>
+
+  <script>
+    document.getElementById('status').innerText = '⏳ SDK 로드 중...';
+
+    var script = document.createElement('script');
+    script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=29e335fb271b4c71a9a5bdfdaf3d6507&autoload=false';
+
+    script.onload = function() {
+      document.getElementById('status').innerText = '✅ SDK 로드 성공! 지도 초기화 중...';
+      kakao.maps.load(function() {
+        var container = document.getElementById('map');
+        var options = {
+          center: new kakao.maps.LatLng(37.5665, 126.9780),
+          level: 6
+        };
+        var map = new kakao.maps.Map(container, options);
+        document.getElementById('status').innerText = '✅ 지도 로드 성공!';
+      });
+    };
+
+    script.onerror = function(e) {
+      document.getElementById('status').innerText = '❌ SDK 로드 실패 — 키 또는 도메인 문제';
+      document.getElementById('status').style.color = 'red';
+      console.error('Kakao SDK 오류:', e);
+    };
+
+    document.head.appendChild(script);
+  </script>
+</body>
+</html>

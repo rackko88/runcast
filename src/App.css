@@ -1,0 +1,315 @@
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body, #root { height: 100%; background: #F9FAFB; }
+
+/* ── 토스 디자인 토큰 ── */
+:root {
+  --blue:    #3182F6;
+  --red:     #F04452;
+  --orange:  #F5A623;
+  --green:   #12B968;
+  --purple:  #7248D9;
+  --gray50:  #F9FAFB;
+  --gray100: #F2F4F6;
+  --gray200: #E5E8EB;
+  --gray400: #B0B8C1;
+  --gray600: #6B7684;
+  --gray800: #333D4B;
+  --black:   #191F28;
+  --white:   #FFFFFF;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.10);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --header-h: 56px;
+  --sheet-h:  150px;
+}
+
+/* ── 앱 레이아웃 (모바일 우선) ── */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  font-family: -apple-system, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  background: var(--gray50);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── 헤더 ── */
+.app-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--gray200);
+}
+
+.app-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--black);
+  letter-spacing: -0.3px;
+}
+
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+.header-weather {
+  font-size: 15px;
+  color: var(--gray600);
+  font-weight: 500;
+}
+
+.alert-badge {
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+/* ── 지도 영역 ── */
+.map-area {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* ── 날씨 플로팅 카드 ── */
+.weather-float {
+  position: absolute;
+  top: calc(var(--header-h) + 12px);
+  right: 12px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+}
+.weather-float.alert { outline: 2px solid var(--blue); }
+
+.wf-icon { font-size: 26px; line-height: 1; }
+.wf-info { display: flex; flex-direction: column; gap: 1px; }
+.wf-temp { font-size: 20px; font-weight: 700; color: var(--black); line-height: 1; }
+.wf-desc { font-size: 11px; color: var(--gray600); }
+.wf-rain { font-size: 11px; color: var(--blue); font-weight: 600; padding-left: 10px; border-left: 1px solid var(--gray200); }
+.wf-pop  { font-size: 11px; color: var(--blue); font-weight: 600; }
+
+/* ── 범례 ── */
+.map-legend {
+  position: absolute;
+  bottom: calc(var(--sheet-h) + 12px);
+  left: 12px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  display: flex;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+  z-index: 50;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray800); font-weight: 500; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.loc-error-float {
+  position: absolute;
+  top: calc(var(--header-h) + 12px);
+  left: 12px;
+  background: rgba(240,68,82,0.1);
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  z-index: 50;
+}
+
+/* ── 바텀 시트 ── */
+.bottom-sheet {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 80;
+  background: var(--white);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: 0 -2px 20px rgba(0,0,0,0.08);
+  transition: transform 0.38s cubic-bezier(0.32,0.72,0,1);
+}
+
+.sheet-handle-btn {
+  width: 100%; background: none; border: none; cursor: pointer; padding: 0;
+}
+.sheet-handle-bar {
+  width: 32px; height: 3px;
+  background: var(--gray200);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+.sheet-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px 10px;
+}
+.sheet-title { font-size: 15px; font-weight: 700; color: var(--black); }
+.sheet-header-meta { display: flex; align-items: center; gap: 8px; }
+.mock-tag {
+  background: #FFF3CD;
+  color: #856404;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.update-time { font-size: 11px; color: var(--gray400); }
+.refresh-btn {
+  background: var(--gray100);
+  border: none;
+  color: var(--gray800);
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── 하천 카드 가로 스크롤 ── */
+.river-cards {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.river-cards::-webkit-scrollbar { display: none; }
+
+.river-card {
+  flex-shrink: 0;
+  background: var(--gray50);
+  border: 1px solid var(--gray200);
+  border-top: 3px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  min-width: 130px;
+}
+.river-card.skeleton { height: 90px; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+.rc-name { display: block; font-size: 14px; font-weight: 700; color: var(--black); margin-bottom: 3px; }
+.rc-status { display: block; font-size: 12px; font-weight: 600; margin-bottom: 10px; }
+.rc-stations { display: flex; flex-direction: column; gap: 5px; }
+.rc-station { display: flex; align-items: center; gap: 6px; }
+.rc-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.rc-sname { font-size: 11px; color: var(--gray600); flex: 1; }
+.rc-wl { font-size: 11px; font-weight: 600; color: var(--gray800); }
+
+/* ── 펼친 상세 ── */
+.sheet-detail {
+  padding: 4px 20px 24px;
+  max-height: 45dvh;
+  overflow-y: auto;
+}
+.detail-group { margin-bottom: 20px; }
+.detail-group-title {
+  font-size: 11px; font-weight: 700;
+  color: var(--gray400);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.detail-station { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.ds-name { font-size: 13px; color: var(--gray800); width: 110px; flex-shrink: 0; }
+.ds-bar-wrap { flex: 1; display: flex; align-items: center; gap: 8px; }
+.ds-bar {
+  flex: 1; height: 5px;
+  background: var(--gray100);
+  border-radius: 3px;
+  position: relative; overflow: visible;
+}
+.ds-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+.ds-warn-mark {
+  position: absolute; top: -4px;
+  width: 2px; height: 13px;
+  background: var(--orange);
+  border-radius: 1px;
+  transform: translateX(-50%);
+}
+.ds-wl { font-size: 12px; font-weight: 700; width: 42px; text-align: right; }
+
+/* ── 카카오 마커 ── */
+.user-dot {
+  width: 16px; height: 16px;
+  background: var(--blue);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(49,130,246,0.25);
+}
+.station-marker {
+  width: 12px; height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+/* ── PC 반응형 (768px+) ── */
+@media (min-width: 768px) {
+  .app { flex-direction: row; }
+
+  .app-header {
+    width: 360px;
+    position: relative;
+    top: auto; left: auto; right: auto;
+    height: 64px;
+    border-bottom: 1px solid var(--gray200);
+    border-right: 1px solid var(--gray200);
+    backdrop-filter: none;
+    background: var(--white);
+  }
+
+  .map-area {
+    position: relative;
+    flex: 1;
+    height: 100dvh;
+    inset: auto;
+  }
+
+  .weather-float { top: 16px; }
+  .map-legend { bottom: 16px; }
+
+  /* PC 사이드 패널 */
+  .bottom-sheet {
+    position: relative;
+    width: 360px;
+    height: 100dvh;
+    border-radius: 0;
+    border-top: none;
+    border-right: 1px solid var(--gray200);
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    order: -1;
+  }
+
+  .sheet-handle-bar { display: none; }
+  .sheet-header-row { padding: 16px 20px 12px; }
+
+  .river-cards { flex-wrap: wrap; overflow-x: visible; }
+  .river-card { width: calc(50% - 5px); min-width: unset; }
+
+  .sheet-detail { flex: 1; max-height: none; }
+}
