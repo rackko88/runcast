@@ -78,7 +78,6 @@ function parseNotices(html, baseUrl, label, color) {
     const isEmergency = EMERGENCY_KEYWORDS.some(kw => title.includes(kw));
 
     notices.push({ source: label, color, title, date, url, isEmergency });
-    if (notices.length >= 6) break;
   }
 
   // Fallback: WordPress/blog style <article> or <li> with links
@@ -105,7 +104,6 @@ function parseNotices(html, baseUrl, label, color) {
       const isEmergency = EMERGENCY_KEYWORDS.some(kw => title.includes(kw));
 
       notices.push({ source: label, color, title, date, url, isEmergency });
-      if (notices.length >= 6) break;
     }
   }
 
@@ -135,11 +133,22 @@ export default async function handler(req, res) {
     }
   });
 
+  // 당일 공지만 표시 (날짜 필드가 없는 것도 포함)
+  const seoulNow = new Date(new Date().toLocaleString('en', { timeZone: 'Asia/Seoul' }));
+  const todayStr = `${seoulNow.getFullYear()}.${String(seoulNow.getMonth()+1).padStart(2,'0')}.${String(seoulNow.getDate()).padStart(2,'0')}`;
+
+  const todayNotices = notices.filter(n => !n.date || n.date === todayStr || n.date.startsWith(todayStr));
+
+  // 당일 공지 없으면 최근 3일치 fallback
+  const filtered = todayNotices.length > 0
+    ? todayNotices
+    : notices.slice(0, 10);
+
   // Sort: emergencies first, then by date desc
-  notices.sort((a, b) => {
+  filtered.sort((a, b) => {
     if (a.isEmergency !== b.isEmergency) return a.isEmergency ? -1 : 1;
     return b.date.localeCompare(a.date);
   });
 
-  res.json({ notices, errors, updatedAt: new Date().toISOString() });
+  res.json({ notices: filtered, errors, updatedAt: new Date().toISOString() });
 }

@@ -95,18 +95,43 @@ html, body, #root { height: 100%; background: #F9FAFB; }
   border-radius: var(--radius-md);
   padding: 10px 14px;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
   box-shadow: var(--shadow-md);
   z-index: 50;
+  min-width: 200px;
 }
 .weather-float.alert { outline: 2px solid var(--blue); }
 
-.wf-icon { font-size: 26px; line-height: 1; }
-.wf-info { display: flex; flex-direction: column; gap: 1px; }
+.wf-top { display: flex; align-items: center; gap: 10px; }
+.wf-icon { font-size: 26px; line-height: 1; flex-shrink: 0; }
+.wf-info { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.wf-temp-row { display: flex; align-items: baseline; gap: 6px; }
 .wf-temp { font-size: 20px; font-weight: 700; color: var(--black); line-height: 1; }
+.wf-range { font-size: 11px; color: var(--gray600); }
 .wf-desc { font-size: 11px; color: var(--gray600); }
-.wf-rain { font-size: 11px; color: var(--blue); font-weight: 600; padding-left: 10px; border-left: 1px solid var(--gray200); }
+.wf-hum { font-size: 12px; color: var(--blue); font-weight: 600; flex-shrink: 0; }
+
+.wf-sun {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--gray600);
+  font-weight: 500;
+  padding-top: 4px;
+  border-top: 1px solid var(--gray100);
+}
+
+.wf-air {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.wf-air-grade { font-weight: 700; }
+.wf-air-vals { color: var(--gray400); }
+
+.wf-rain { font-size: 11px; color: var(--blue); font-weight: 600; }
 .wf-pop  { font-size: 11px; color: var(--blue); font-weight: 600; }
 
 /* ── 범례 ── */

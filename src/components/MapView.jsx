@@ -54,7 +54,15 @@ export default function MapView({ location, riverData }) {
     return () => { cancelled = true; };
   }, []);
 
-  // 2) 내 위치 마커
+  // 2) 컨테이너 크기 변경 시 지도 재렌더 (flex/grid 레이아웃 대응)
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    const ro = new ResizeObserver(() => mapInst.current?.relayout());
+    ro.observe(mapRef.current);
+    return () => ro.disconnect();
+  }, [mapReady]);
+
+  // 4) 내 위치 마커
   useEffect(() => {
     if (!mapReady || !location) return;
     const K = window.kakao.maps;
@@ -70,7 +78,7 @@ export default function MapView({ location, riverData }) {
     return () => marker.setMap(null);
   }, [mapReady, location]);
 
-  // 3) 하천 폴리라인 + 관측소 마커
+  // 5) 하천 폴리라인 + 관측소 마커
   useEffect(() => {
     if (!mapReady) return;
     const K = window.kakao.maps;
