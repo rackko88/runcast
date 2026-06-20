@@ -1,4 +1,5 @@
 import { RIVER_COLORS } from '../data/rivers';
+import NoticeBoard from './NoticeBoard';
 
 const STATUS_LABEL = { 정상:'정상', 주의:'주의', 경계:'경계', 위험:'위험', 통제:'통제', 오류:'-' };
 
@@ -16,7 +17,7 @@ function groupByRiver(data) {
   }, {});
 }
 
-export default function BottomSheet({ riverData, loading, isMock, lastUpdated, onRefresh, open, onToggle }) {
+export default function BottomSheet({ riverData, loading, isMock, lastUpdated, onRefresh, open, onToggle, notices, noticesLoading, noticesUpdated, onRefreshNotices }) {
   const grouped = groupByRiver(riverData);
 
   return (
@@ -67,7 +68,7 @@ export default function BottomSheet({ riverData, loading, isMock, lastUpdated, o
         )}
       </div>
 
-      {/* 펼쳤을 때 상세 수위 바 */}
+      {/* 펼쳤을 때 상세 수위 바 + 공지사항 */}
       {open && (
         <div className="sheet-detail">
           {Object.entries(grouped).map(([name, stations]) => (
@@ -95,6 +96,13 @@ export default function BottomSheet({ riverData, loading, isMock, lastUpdated, o
               ))}
             </div>
           ))}
+
+          <NoticeBoard
+            notices={notices}
+            loading={noticesLoading}
+            lastUpdated={noticesUpdated}
+            onRefresh={onRefreshNotices}
+          />
         </div>
       )}
     </div>

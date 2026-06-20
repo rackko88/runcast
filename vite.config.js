@@ -15,6 +15,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: path => path.replace(/^\/kma-api/, ''),
       },
+      // /api/* → vercel dev (port 3000) when running locally
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
 })

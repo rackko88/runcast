@@ -50,6 +50,7 @@ export const RIVER_COLORS = {
 export function getStatusFromLevel(waterLevel, warnLevel, dangerLevel) {
   if (waterLevel === null || waterLevel === undefined) return '오류';
   if (waterLevel >= dangerLevel) return '통제';
+  if (waterLevel >= dangerLevel * 0.8) return '위험';
   if (waterLevel >= warnLevel) return '경계';
   if (waterLevel >= warnLevel * 0.8) return '주의';
   return '정상';
