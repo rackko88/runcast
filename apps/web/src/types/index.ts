@@ -46,4 +46,5 @@ export interface Notice {
   date: string;
   url?: string;
   isEmergency: boolean;
+  content?: string | null;
 }
