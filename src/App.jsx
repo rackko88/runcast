@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import MapView from './components/MapView';
-import WeatherFloat from './components/WeatherFloat';
-import WeatherDetail from './components/WeatherDetail';
-import RiverDetail from './components/RiverDetail';
-import NoticeBoard from './components/NoticeBoard';
-import BottomTabBar from './components/BottomTabBar';
-import { useLocation } from './hooks/useLocation';
-import { useWeather } from './hooks/useWeather';
-import { useRiverData } from './hooks/useRiverData';
-import { useNotices } from './hooks/useNotices';
-import { RIVER_COLORS } from './data/rivers';
+import { BrowserRouter, Routes, Route, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import MapPage from '@/pages/MapPage';
+import NoticePage from '@/pages/NoticePage';
+import WeatherPage from '@/pages/WeatherPage';
+import RiverPage from '@/pages/RiverPage';
+import MapView from '@/features/map/MapView';
+import WeatherFloat from '@/features/weather/WeatherFloat';
+import WeatherDetail from '@/features/weather/WeatherDetail';
+import RiverDetail from '@/features/river/RiverDetail';
+import NoticeBoard from '@/features/notice/NoticeBoard';
+import BottomTabBar from '@/shared/components/BottomTabBar';
+import { useLocation as useGeoLocation } from '@/shared/hooks/useLocation';
+import { useWeather } from '@/features/weather/useWeather';
+import { useRiverData } from '@/features/river/useRiverData';
+import { useNotices } from '@/features/notice/useNotices';
+import { RIVER_COLORS } from '@/features/river/rivers';
 import './App.css';
 
 const PC_TABS = [
@@ -18,12 +22,15 @@ const PC_TABS = [
   { id: 'weather', label: '날씨상세' },
 ];
 
-export default function App() {
-  // 모바일: 'map' | 'notice' | 'weather' | 'river'
-  // PC:     map 탭은 없고 사이드바가 탭을 가짐 → activeTab이 'map'이면 'river'로 취급
-  const [activeTab, setActiveTab] = useState('map');
+function AppLayout() {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
 
-  const { location, error: locError } = useLocation();
+  // pathname → activeTab: '/' = 'map', '/river' = 'river', etc.
+  const activeTab = pathname === '/' ? 'map' : pathname.slice(1);
+  const sidebarTab = activeTab === 'map' ? 'river' : activeTab;
+
+  const { location, error: locError } = useGeoLocation();
   const { weather, loading: wLoading } = useWeather(location);
   const { riverData, loading: rLoading, isMock, lastUpdated, refresh } = useRiverData();
   const { notices, loading: nLoading, lastUpdated: nUpdated, refresh: nRefresh } = useNotices();
@@ -31,10 +38,7 @@ export default function App() {
   const alertCount = riverData.filter(s => ['통제', '위험'].includes(s.status)).length;
   const hasEmergency = notices.some(n => n.isEmergency);
 
-  // PC 사이드바는 'map' 탭을 'river'로 매핑
-  const sidebarTab = activeTab === 'map' ? 'river' : activeTab;
-
-  function tabContent(tab) {
+  function sidebarContent(tab) {
     switch (tab) {
       case 'river':
         return <RiverDetail riverData={riverData} loading={rLoading} isMock={isMock} lastUpdated={lastUpdated} onRefresh={refresh} />;
@@ -46,6 +50,8 @@ export default function App() {
         return null;
     }
   }
+
+  const ctx = { weather, wLoading, riverData, rLoading, isMock, lastUpdated, refresh, notices, nLoading, nUpdated, nRefresh };
 
   return (
     <div className="app">
@@ -69,7 +75,7 @@ export default function App() {
             <button
               key={id}
               className={`pc-tab-btn${sidebarTab === id ? ' active' : ''}`}
-              onClick={() => setActiveTab(id)}
+              onClick={() => navigate(`/${id}`)}
             >
               {label}
               {id === 'river' && alertCount > 0 && <span className="pc-tab-badge">{alertCount}</span>}
@@ -80,7 +86,7 @@ export default function App() {
 
         {/* PC 전용 탭 컨텐츠 */}
         <div className="pc-tab-content">
-          {tabContent(sidebarTab)}
+          {sidebarContent(sidebarTab)}
         </div>
       </div>
 
@@ -103,10 +109,10 @@ export default function App() {
           {locError && <div className="loc-error-float">{locError}</div>}
         </div>
 
-        {/* 모바일 탭 컨텐츠 (map 탭 제외) */}
+        {/* 모바일 탭 컨텐츠 (map 탭 제외, Outlet으로 페이지 렌더) */}
         {activeTab !== 'map' && (
           <div className="view-tab">
-            {tabContent(activeTab)}
+            <Outlet context={ctx} />
           </div>
         )}
       </div>
@@ -114,10 +120,25 @@ export default function App() {
       {/* ── 하단 탭바 (모바일 전용) ── */}
       <BottomTabBar
         activeTab={activeTab}
-        onChange={setActiveTab}
+        onChange={(tab) => navigate(tab === 'map' ? '/' : `/${tab}`)}
         alertCount={alertCount}
         hasEmergency={hasEmergency}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AppLayout />}>
+          <Route index element={<MapPage />} />
+          <Route path="notice"  element={<NoticePage />} />
+          <Route path="weather" element={<WeatherPage />} />
+          <Route path="river"   element={<RiverPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }

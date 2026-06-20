@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { RIVER_PATHS, RIVER_COLORS } from '../data/rivers';
+import { RIVER_PATHS, RIVER_COLORS } from '../river/rivers';
 
 // Kakao SDK를 동적으로 로드 (import.meta.env로 키를 직접 사용)
 let sdkPromise = null;

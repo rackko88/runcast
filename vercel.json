@@ -7,6 +7,10 @@
     {
       "source": "/kma-api/:path*",
       "destination": "https://apihub.kma.go.kr/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }

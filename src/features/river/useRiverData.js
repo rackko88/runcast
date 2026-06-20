@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { STATIONS, getStatusFromLevel } from '../data/rivers';
-import { fetchWaterLevels } from '../services/riverApi';
+import { STATIONS, getStatusFromLevel } from './rivers';
+import { fetchWaterLevels } from './riverApi';
 
 export function useRiverData() {
   const [riverData, setRiverData] = useState([]);

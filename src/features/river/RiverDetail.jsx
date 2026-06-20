@@ -1,4 +1,4 @@
-import { RIVER_COLORS } from '../data/rivers';
+import { RIVER_COLORS } from './rivers';
 
 const STATUS_LABEL = { 정상:'정상', 주의:'주의', 경계:'경계', 위험:'위험', 통제:'통제', 오류:'-' };
 
