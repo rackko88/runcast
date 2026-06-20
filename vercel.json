@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/hrfco-api/:path*",
+      "destination": "https://api.hrfco.go.kr/:path*"
+    },
+    {
+      "source": "/kma-api/:path*",
+      "destination": "https://apihub.kma.go.kr/:path*"
+    }
+  ]
+}
