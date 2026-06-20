@@ -13,6 +13,10 @@ const SOURCES = [
 
 const EMERGENCY_KEYWORDS = ['통제', '차단', '접근금지', '출입금지', '폐쇄', '위험', '경보', '주의보', '해제'];
 
+function decodeHtmlEntities(str) {
+  return str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+}
+
 async function fetchHtml(url, encoding) {
   const res = await fetch(url, {
     headers: {
@@ -43,7 +47,7 @@ function parseNotices(html, baseUrl, label, color) {
     const linkMatch = row.match(/<a[^>]+href="([^"#][^"]*)"[^>]*>([\s\S]*?)<\/a>/i);
     if (!linkMatch) continue;
 
-    const href = linkMatch[1].trim();
+    const href = decodeHtmlEntities(linkMatch[1].trim());
     const title = linkMatch[2]
       .replace(/<[^>]+>/g, '')
       .replace(/\s+/g, ' ')
