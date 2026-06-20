@@ -2,27 +2,11 @@
 
 const SOURCES = [
   {
-    id: 'cheonggye',
-    label: '청계천',
+    id: 'sisul',
+    label: '서울시설공단',
     color: '#3182F6',
-    url: 'https://www.sisul.or.kr/open_content/cheonggye/notice/noticeList.do',
+    url: 'https://www.sisul.or.kr/open_content/cheonggye/community/notice.jsp',
     baseUrl: 'https://www.sisul.or.kr',
-    encoding: 'euc-kr',
-  },
-  {
-    id: 'hangang',
-    label: '한강공원',
-    color: '#00a878',
-    url: 'https://hangang.seoul.go.kr/archives/category/notice',
-    baseUrl: 'https://hangang.seoul.go.kr',
-    encoding: 'utf-8',
-  },
-  {
-    id: 'hangang-safety',
-    label: '한강안전',
-    color: '#f97316',
-    url: 'https://hangang.seoul.go.kr/archives/category/safety',
-    baseUrl: 'https://hangang.seoul.go.kr',
     encoding: 'utf-8',
   },
 ];
