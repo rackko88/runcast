@@ -295,7 +295,10 @@ interface Props {
 }
 
 export default function WeatherDetail({ weather, loading, locationLabel }: Props) {
+  // 훅은 early return 앞에 모두 선언
   const now = useMemo(() => new Date(), [weather]);
+  const [selectedHourIdx, setSelectedHourIdx] = useState<number | null>(null);
+  const hourlyScrollRef = useRef<HTMLDivElement>(null);
 
   if (loading) return <Placeholder>날씨 불러오는 중…</Placeholder>;
   if (!weather) return <Placeholder>날씨 정보를 가져올 수 없습니다</Placeholder>;
@@ -304,8 +307,6 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
   const si    = scoreInfo(score);
   const grade = pmGrade(weather.pm10, weather.pm25);
   const nowH  = now.getHours();
-  const [selectedHourIdx, setSelectedHourIdx] = useState<number | null>(null);
-  const hourlyScrollRef = useRef<HTMLDivElement>(null);
   function scrollHourly(dir: number) {
     hourlyScrollRef.current?.scrollBy({ left: dir * 190, behavior: 'smooth' });
   }
