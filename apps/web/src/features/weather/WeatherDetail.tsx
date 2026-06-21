@@ -87,6 +87,26 @@ function windDirLabel(deg?: number) {
   return ['북','북동','동','남동','남','남서','서','북서'][Math.round(deg / 45) % 8];
 }
 
+function windStrength(ms: number) {
+  if (ms < 0.3)  return '고요';
+  if (ms < 1.6)  return '실바람';
+  if (ms < 3.4)  return '약한 바람';
+  if (ms < 5.5)  return '산들바람';
+  if (ms < 8.0)  return '건들바람';
+  if (ms < 10.8) return '강한 바람';
+  if (ms < 13.9) return '매우 강함';
+  return '폭풍';
+}
+
+function humidityLabel(h: number) {
+  if (h < 30) return '매우 건조';
+  if (h < 40) return '건조';
+  if (h < 60) return '쾌적';
+  if (h < 70) return '약간 습함';
+  if (h < 80) return '습함';
+  return '매우 습함';
+}
+
 function hourLabel(h: number, isFirst: boolean) {
   if (isFirst) return '지금';
   return h === 0 ? '자정' : h < 12 ? `오전${h}시` : h === 12 ? '오후12시' : `오후${h - 12}시`;
@@ -248,10 +268,10 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
           </BigInfo>
         </Current>
         <Grid>
-          <DataCell label="습도" value={`${weather.humidity}%`} />
+          <DataCell label="습도" value={`${weather.humidity}% · ${humidityLabel(weather.humidity)}`} />
           <DataCell
             label="바람"
-            value={`${weather.windSpeed}m/s${weather.windDirection != null ? ` ${windDirLabel(weather.windDirection)}` : ''}`}
+            value={`${weather.windSpeed}m/s ${windStrength(weather.windSpeed)}${weather.windDirection != null ? ` · ${windDirLabel(weather.windDirection)}` : ''}`}
           />
           {(weather.precipProbability ?? 0) > 0 && (
             <DataCell label="강수확률" value={`${weather.precipProbability}%`} />
