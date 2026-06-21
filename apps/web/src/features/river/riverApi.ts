@@ -39,6 +39,8 @@ function getMockData(stationIds: string[]): WaterLevelResult[] {
     '1018670': 1.23, '1018675': 1.82,
     '1018697': 0.95, '1018695': 0.61,
     '1018658': 1.54, '1018655': 0.42,
+    '1016650': 0.82, '1016670': 0.54,
+    '1006665': 0.71, '1006670': 1.23,
   };
   return stationIds.map(id => ({ stationId: id, waterLevel: mock[id] ?? 0.5, isMock: true }));
 }

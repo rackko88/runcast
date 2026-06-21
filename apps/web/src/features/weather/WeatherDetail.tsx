@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import styled from '@emotion/styled';
 import { theme } from '@runcast/ui';
 import type { WeatherData } from '@/types';
@@ -71,6 +71,14 @@ function scoreInfo(score: number) {
   if (score >= 50) return { text: '보통',   color: '#f59e0b', emoji: '🟠' };
   if (score >= 30) return { text: '주의',   color: '#f97316', emoji: '🔴' };
   return                  { text: '비추천', color: '#ef4444', emoji: '⛔' };
+}
+
+function uvGrade(uv: number) {
+  if (uv <= 2)  return { text: '낮음',   color: '#22c55e', desc: '야외 활동 자유롭게 가능' };
+  if (uv <= 5)  return { text: '보통',   color: '#f59e0b', desc: '오전·오후 햇빛 차단 권고' };
+  if (uv <= 7)  return { text: '높음',   color: '#f97316', desc: '차단제·모자 착용 필수' };
+  if (uv <= 10) return { text: '매우높음', color: '#ef4444', desc: '10~14시 야외 활동 자제' };
+  return               { text: '위험',   color: '#7c3aed', desc: '가급적 실내 활동 권고' };
 }
 
 const PM_GRADES = [
@@ -186,6 +194,19 @@ const CellLabel = styled.span`font-size: 11px; color: ${theme.colors.gray400}; f
 const CellVal = styled.span`font-size: 14px; font-weight: 700; color: ${theme.colors.black}; word-break: keep-all; overflow-wrap: break-word;`;
 const CellSub = styled.span`font-size: 11px; color: ${theme.colors.gray600}; font-weight: 500;`;
 
+// UV
+const UvRow = styled.div`display: flex; align-items: center; gap: 10px; padding: 4px 0;`;
+const UvGrade = styled.span<{ $color: string }>`font-size: 13px; font-weight: 700; color: ${p => p.$color};`;
+const UvVal = styled.span`font-size: 20px; font-weight: 700; color: ${theme.colors.black};`;
+const UvDesc = styled.span`font-size: 11px; color: ${theme.colors.gray600};`;
+const UvBar = styled.div`height: 6px; border-radius: 3px; margin-top: 6px;
+  background: linear-gradient(to right, #22c55e 0%, #f59e0b 30%, #f97316 60%, #ef4444 80%, #7c3aed 100%);`;
+const UvMarker = styled.div<{ $pos: number }>`
+  position: absolute; top: -3px; left: ${p => p.$pos}%;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #fff; border: 2px solid #333; transform: translateX(-50%);
+`;
+
 // 시간별
 const HourlyScroll = styled.div`
   display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
@@ -269,6 +290,7 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
   const si    = scoreInfo(score);
   const grade = pmGrade(weather.pm10, weather.pm25);
   const nowH  = now.getHours();
+  const [selectedHourIdx, setSelectedHourIdx] = useState<number | null>(null);
 
   return (
     <Wrap>
@@ -320,27 +342,42 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
       {/* 시간별 예보 */}
       {(weather.hourly?.length ?? 0) > 0 && (
         <Card>
-          <SectionTitle>시간별 예보 · 강수확률 포함</SectionTitle>
+          <SectionTitle>시간별 예보</SectionTitle>
           <HourlyScroll>
             {weather.hourly!.map((h, i) => {
               const isNow = i === 0;
-              const showRain = h.precipProbability > 0;
+              const sel = selectedHourIdx === i;
               return (
-                <HourCell key={i} $now={isNow}>
+                <HourCell
+                  key={i} $now={isNow}
+                  onClick={() => setSelectedHourIdx(sel ? null : i)}
+                  style={{ cursor: 'pointer', outline: sel ? '2px solid #3182F6' : undefined }}
+                >
                   <HourTime $now={isNow}>{hourLabel(h.hour, isNow)}</HourTime>
                   <HourIcon>{h.icon}</HourIcon>
-                  <HourDesc $now={isNow}>{h.description}</HourDesc>
                   <HourTemp $now={isNow}>{h.temperature}°</HourTemp>
                   <HourRainWrap>
-                    <HourRain $show={showRain} $now={isNow}>
-                      {showRain ? `${h.precipProbability}%` : '　'}
+                    <HourRain $show={true} $now={isNow}>
+                      {h.precipProbability > 0 ? `${h.precipProbability}%` : '-'}
                     </HourRain>
-                    {showRain && <HourRainLabel $now={isNow}>강수확률</HourRainLabel>}
+                    <HourRainLabel $now={isNow}>강수</HourRainLabel>
                   </HourRainWrap>
                 </HourCell>
               );
             })}
           </HourlyScroll>
+          {selectedHourIdx !== null && (() => {
+            const h = weather.hourly![selectedHourIdx];
+            return (
+              <div style={{ marginTop: 10, padding: '10px 12px', background: theme.colors.gray50, borderRadius: 10, fontSize: 12, lineHeight: 1.8 }}>
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>{hourLabel(h.hour, selectedHourIdx === 0)} 상세</div>
+                <div>날씨: {h.description}</div>
+                <div>체감온도: {h.feelsLike}°C</div>
+                <div>풍속: {h.windSpeed}m/s</div>
+                <div>강수확률: {h.precipProbability}%</div>
+              </div>
+            );
+          })()}
         </Card>
       )}
 
@@ -417,6 +454,29 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
           </Grid>
         </Card>
       )}
+
+      {/* 자외선 지수 */}
+      {weather.uvIndex != null && (() => {
+        const uv = weather.uvIndex!;
+        const g = uvGrade(uv);
+        const pos = Math.min(98, Math.round(uv / 11 * 100));
+        return (
+          <Card>
+            <SectionTitle>자외선 지수</SectionTitle>
+            <UvRow>
+              <UvVal>{uv}</UvVal>
+              <div>
+                <UvGrade $color={g.color}>{g.text}</UvGrade>
+                <UvDesc style={{ display: 'block', marginTop: 2 }}>{g.desc}</UvDesc>
+              </div>
+            </UvRow>
+            <div style={{ position: 'relative', marginTop: 8 }}>
+              <UvBar />
+              <UvMarker $pos={pos} />
+            </div>
+          </Card>
+        );
+      })()}
 
       {weather.source && <Source>출처: {weather.source} · Open-Meteo</Source>}
     </Wrap>

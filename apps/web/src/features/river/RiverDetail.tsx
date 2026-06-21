@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { theme } from '@runcast/ui';
@@ -6,7 +7,21 @@ import type { RiverStation, RiverStatus } from '@/types';
 
 const shimmer = keyframes`0%,100%{opacity:.5} 50%{opacity:1}`;
 
+const REGION_RIVERS: Record<string, string[]> = {
+  '서울': ['한강', '청계천', '중랑천', '안양천', '탄천'],
+  '경기 광주': ['경안천'],
+  '강원 원주': ['원주천', '섬강'],
+};
+const REGIONS = Object.keys(REGION_RIVERS);
+
 const Wrap = styled.div`display: flex; flex-direction: column; height: 100%;`;
+const RegionTabs = styled.div`display: flex; gap: 6px; margin-bottom: 12px; flex-shrink: 0;`;
+const RegionTab = styled.button<{ $active: boolean }>`
+  padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  border: none; cursor: pointer; transition: all 0.15s;
+  background: ${p => p.$active ? theme.colors.blue : theme.colors.gray100};
+  color: ${p => p.$active ? '#fff' : theme.colors.gray600};
+`;
 const Header = styled.div`display: flex; align-items: center; justify-content: space-between; padding: 0 0 12px;`;
 const Meta = styled.div`display: flex; align-items: center; gap: 8px;`;
 const Time = styled.span`font-size: 11px; color: ${theme.colors.gray400};`;
@@ -81,7 +96,10 @@ interface Props {
 }
 
 export default function RiverDetail({ riverData, loading, isMock, lastUpdated, onRefresh }: Props) {
-  const grouped = groupByRiver(riverData);
+  const [activeRegion, setActiveRegion] = useState('서울');
+  const allowedRivers = REGION_RIVERS[activeRegion] ?? [];
+  const filtered = riverData.filter(s => allowedRivers.includes(s.river));
+  const grouped = groupByRiver(filtered);
 
   return (
     <Wrap>
@@ -94,6 +112,12 @@ export default function RiverDetail({ riverData, loading, isMock, lastUpdated, o
         </Meta>
         <RefreshBtn onClick={onRefresh}>↻</RefreshBtn>
       </Header>
+
+      <RegionTabs>
+        {REGIONS.map(r => (
+          <RegionTab key={r} $active={activeRegion === r} onClick={() => setActiveRegion(r)}>{r}</RegionTab>
+        ))}
+      </RegionTabs>
 
       <Cards>
         {loading ? (

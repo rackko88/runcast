@@ -36,14 +36,19 @@ function getRiverStatus(riverName: string, riverData: RiverStation[]): RiverStat
 
 const MapWrapper = styled.div`position: relative; width: 100%; height: 100%;`;
 const MapContainer = styled.div`width: 100%; height: 100%;`;
-const MapToggles = styled.div`
-  position: absolute; bottom: 70px; right: 12px; z-index: 100;
-  display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+const MapLayerPanel = styled.div`
+  position: absolute; top: 12px; left: 12px; z-index: 100;
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+  border-radius: 14px; padding: 10px 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.14);
+  display: flex; flex-direction: column; gap: 8px; min-width: 110px;
+`;
+const LayerTitle = styled.div`
+  font-size: 10px; font-weight: 700; color: #8B95A1; letter-spacing: 0.4px; text-transform: uppercase;
+  padding-bottom: 4px; border-bottom: 1px solid #F2F4F6;
 `;
 const ToggleChip = styled.label`
-  background: #fff; border-radius: 20px; padding: 6px 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 8px;
   font-size: 12px; font-weight: 600; color: #333;
   cursor: pointer; user-select: none;
 `;
@@ -116,8 +121,11 @@ export default function MapView({ location, riverData }: Props) {
     const polylines: { setMap: (v: null) => void }[] = [];
 
     function showPopup(html: string, position: unknown) {
-      const ov = overlayRef.current as { setContent: (h: string) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
-      ov.setContent(html);
+      const ov = overlayRef.current as { setContent: (h: HTMLElement) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
+      const el = document.createElement('div');
+      el.innerHTML = html;
+      K.event.preventMap(el);
+      ov.setContent(el);
       ov.setPosition(position);
       ov.setMap(map);
     }
@@ -243,8 +251,11 @@ export default function MapView({ location, riverData }: Props) {
 
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        const ov = overlayRef.current as { setContent: (h: string) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
-        ov.setContent(html); ov.setPosition(pos); ov.setMap(map);
+        const ov = overlayRef.current as { setContent: (h: HTMLElement) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
+        const popEl = document.createElement('div');
+        popEl.innerHTML = html;
+        K.event.preventMap(popEl);
+        ov.setContent(popEl); ov.setPosition(pos); ov.setMap(map);
       });
       overlays.push(overlay);
     });
@@ -280,8 +291,11 @@ export default function MapView({ location, riverData }: Props) {
 
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        const ov = overlayRef.current as { setContent: (h: string) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
-        ov.setContent(html); ov.setPosition(pos); ov.setMap(map);
+        const ov = overlayRef.current as { setContent: (h: HTMLElement) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
+        const popEl = document.createElement('div');
+        popEl.innerHTML = html;
+        K.event.preventMap(popEl);
+        ov.setContent(popEl); ov.setPosition(pos); ov.setMap(map);
       });
       overlays.push(overlay);
     });
@@ -298,7 +312,8 @@ export default function MapView({ location, riverData }: Props) {
   return (
     <MapWrapper>
       <MapContainer ref={mapRef} />
-      <MapToggles>
+      <MapLayerPanel>
+        <LayerTitle>레이어</LayerTitle>
         <ToggleChip>
           <input type="checkbox" checked={showTracks} onChange={e => setShowTracks(e.target.checked)} style={{ accentColor: '#7c3aed' }} />
           러닝 스팟
@@ -307,7 +322,7 @@ export default function MapView({ location, riverData }: Props) {
           <input type="checkbox" checked={showCctv} onChange={e => setShowCctv(e.target.checked)} style={{ accentColor: '#e11d48' }} />
           CCTV
         </ToggleChip>
-      </MapToggles>
+      </MapLayerPanel>
       {location && mapReady && (
         <LocBtn onClick={goToMyLocation} title="현재 위치로">📍</LocBtn>
       )}

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { BrowserRouter, Routes, Route, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Cloud, Waves, Bell, RefreshCw } from 'lucide-react';
 import { theme } from '@runcast/ui';
 import MapPage from '@/pages/MapPage';
 import NoticePage from '@/pages/NoticePage';
@@ -157,7 +158,9 @@ function AppLayout() {
   const { notices, loading: nLoading, lastUpdated: nUpdated, refresh: nRefresh } = useNotices();
 
   const alertCount = riverData.filter(s => ['통제', '위험'].includes(s.status)).length;
-  const hasEmergency = notices.some(n => n.isEmergency);
+  const seoulNow = new Date(new Date().toLocaleString('en', { timeZone: 'Asia/Seoul' }));
+  const todayKey = `${seoulNow.getFullYear()}.${String(seoulNow.getMonth()+1).padStart(2,'0')}.${String(seoulNow.getDate()).padStart(2,'0')}`;
+  const hasEmergency = notices.some(n => n.isEmergency && n.date === todayKey);
 
   function sidebarContent(tab: string) {
     switch (tab) {
@@ -183,10 +186,10 @@ function AppLayout() {
             </MenuBtn>
             {menuOpen && (
               <MenuDropdown>
-                <MenuItem onClick={() => { navigate('/weather'); setMenuOpen(false); }}>🌤️ 날씨 상세</MenuItem>
-                <MenuItem onClick={() => { navigate('/river');   setMenuOpen(false); }}>🌊 하천 현황</MenuItem>
-                <MenuItem onClick={() => { navigate('/notice');  setMenuOpen(false); }}>🔔 공지 사항</MenuItem>
-                <MenuItem onClick={() => { refresh(); nRefresh(); setMenuOpen(false); }}>↻ 새로고침</MenuItem>
+                <MenuItem onClick={() => { navigate('/weather'); setMenuOpen(false); }}><Cloud size={15}/> 날씨 상세</MenuItem>
+                <MenuItem onClick={() => { navigate('/river');   setMenuOpen(false); }}><Waves size={15}/> 하천 현황</MenuItem>
+                <MenuItem onClick={() => { navigate('/notice');  setMenuOpen(false); }}><Bell size={15}/> 공지 사항</MenuItem>
+                <MenuItem onClick={() => { refresh(); nRefresh(); setMenuOpen(false); }}><RefreshCw size={15}/> 새로고침</MenuItem>
               </MenuDropdown>
             )}
           </HeaderRight>

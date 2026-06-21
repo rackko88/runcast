@@ -78,7 +78,7 @@ async function fetchOpenMeteoFull(lat: number, lng: number) {
     latitude: String(lat), longitude: String(lng),
     current: 'temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m',
     hourly: 'temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m',
-    daily: 'temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code,precipitation_probability_max,precipitation_sum',
+    daily: 'temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code,precipitation_probability_max,precipitation_sum,uv_index_max',
     forecast_days: '7', timezone: 'Asia/Seoul',
   });
   const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
@@ -124,6 +124,7 @@ async function fetchOpenMeteoFull(lat: number, lng: number) {
     tempMin: Math.round(data.daily.temperature_2m_min[0]),
     sunrise: (data.daily.sunrise[0] as string).slice(-5),
     sunset: (data.daily.sunset[0] as string).slice(-5),
+    uvIndex: Math.round(data.daily.uv_index_max[0] ?? 0),
   };
 
   // weekly (7 days)

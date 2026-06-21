@@ -42,6 +42,7 @@ export interface WeatherData {
   sunset?: string;
   pm10?: number;
   pm25?: number;
+  uvIndex?: number;
   hourly?: HourlyWeather[];
   weekly?: DailyWeather[];
 }

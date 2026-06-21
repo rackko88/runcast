@@ -94,7 +94,7 @@ export default function WeatherFloat({ weather, loading }: Props) {
           </FullLeft>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
             <ToggleBtn onClick={() => setCollapsed(true)}>▲</ToggleBtn>
-            <Hum>💧{weather.humidity}%</Hum>
+            <Hum>💧{weather.humidity}% 습도</Hum>
           </div>
         </FullHeader>
 
