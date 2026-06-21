@@ -1,12 +1,13 @@
 import styled from '@emotion/styled';
 import { theme } from '@runcast/ui';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Map, Bell, Cloud, Waves } from 'lucide-react';
 
 const TABS = [
-  { id: 'map',    icon: '📍', label: '지도'  },
-  { id: 'notice', icon: '🔔', label: '공지'  },
-  { id: 'weather',icon: '🌈', label: '날씨'  },
-  { id: 'river',  icon: '🌊', label: '하천'  },
+  { id: 'map',     Icon: Map,    label: '지도' },
+  { id: 'notice',  Icon: Bell,   label: '공지' },
+  { id: 'weather', Icon: Cloud,  label: '날씨' },
+  { id: 'river',   Icon: Waves,  label: '하천' },
 ];
 
 const Nav = styled.nav`
@@ -17,11 +18,10 @@ const Nav = styled.nav`
 `;
 const Btn = styled.button<{ $active: boolean }>`
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; background: none; border: none; cursor: pointer; position: relative; padding: 0;
+  gap: 4px; background: none; border: none; cursor: pointer; position: relative; padding: 0;
   color: ${p => p.$active ? theme.colors.blue : theme.colors.gray400};
   transition: color 0.15s;
 `;
-const Icon = styled.span<{ $active: boolean }>`font-size: 20px; line-height: 1; transition: transform 0.15s; ${p => p.$active && 'transform: scale(1.1);'}`;
 const Label = styled.span`font-size: 10px; font-weight: 600; letter-spacing: -0.2px;`;
 const Badge = styled.span`
   position: absolute; top: 6px; right: calc(50% - 20px);
@@ -39,16 +39,16 @@ export default function BottomTabBar({ alertCount, hasEmergency }: Props) {
 
   return (
     <Nav>
-      {TABS.map(tab => (
+      {TABS.map(({ id, Icon, label }) => (
         <Btn
-          key={tab.id}
-          $active={activeTab === tab.id}
-          onClick={() => navigate(tab.id === 'map' ? '/' : `/${tab.id}`)}
+          key={id}
+          $active={activeTab === id}
+          onClick={() => navigate(id === 'map' ? '/' : `/${id}`)}
         >
-          <Icon $active={activeTab === tab.id}>{tab.icon}</Icon>
-          <Label>{tab.label}</Label>
-          {tab.id === 'river' && alertCount > 0 && <Badge>{alertCount}</Badge>}
-          {tab.id === 'notice' && hasEmergency && <Badge>!</Badge>}
+          <Icon size={22} strokeWidth={activeTab === id ? 2.2 : 1.8} />
+          <Label>{label}</Label>
+          {id === 'river'  && alertCount > 0  && <Badge>{alertCount}</Badge>}
+          {id === 'notice' && hasEmergency     && <Badge>!</Badge>}
         </Btn>
       ))}
     </Nav>
