@@ -92,6 +92,11 @@ function hourLabel(h: number, isFirst: boolean) {
   return h === 0 ? '자정' : h < 12 ? `오전${h}시` : h === 12 ? '오후12시' : `오후${h - 12}시`;
 }
 
+function fmtDate(dateStr: string) {
+  const [, m, d] = dateStr.split('-');
+  return `${parseInt(m)}/${parseInt(d)}`;
+}
+
 function fmtTime(d: Date) {
   const h = d.getHours(), m = d.getMinutes();
   return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${String(m).padStart(2, '0')}`;
@@ -176,7 +181,9 @@ const WeekRow = styled.div`
   &:last-child { border-bottom: none; }
   gap: 8px;
 `;
-const WeekDay = styled.span`font-size: 13px; font-weight: 700; color: ${theme.colors.black}; width: 34px; flex-shrink: 0;`;
+const WeekDay = styled.div`display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; width: 38px;`;
+const WeekDayLabel = styled.span`font-size: 13px; font-weight: 700; color: ${theme.colors.black};`;
+const WeekDate = styled.span`font-size: 10px; color: ${theme.colors.gray400}; font-weight: 500;`;
 const WeekIconWrap = styled.div`display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0;`;
 const WeekEmoji = styled.span`font-size: 18px; flex-shrink: 0;`;
 const WeekDesc = styled.span`font-size: 11px; color: ${theme.colors.gray600}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
@@ -289,8 +296,8 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
           <Grid>
             {weather.tempMax != null && (
               <>
-                <DataCell label="최고기온 🌡️" value={`${weather.tempMax}°C`} />
-                <DataCell label="최저기온 🌡️" value={`${weather.tempMin}°C`} />
+                <DataCell label="최고기온 ☀️" value={`${weather.tempMax}°C`} />
+                <DataCell label="최저기온 🌙" value={`${weather.tempMin}°C`} />
               </>
             )}
             {weather.sunrise && (
@@ -309,7 +316,10 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
           <SectionTitle>주간 예보 (7일)</SectionTitle>
           {weather.weekly!.map((d, i) => (
             <WeekRow key={i}>
-              <WeekDay>{d.dayLabel}</WeekDay>
+              <WeekDay>
+                <WeekDayLabel>{d.dayLabel}</WeekDayLabel>
+                <WeekDate>{fmtDate(d.date)}</WeekDate>
+              </WeekDay>
               <WeekIconWrap>
                 <WeekEmoji>{d.icon}</WeekEmoji>
                 <WeekDesc>{d.description}</WeekDesc>

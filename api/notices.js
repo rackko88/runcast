@@ -9,6 +9,14 @@ const SOURCES = [
     baseUrl: 'https://www.sisul.or.kr',
     encoding: 'utf-8',
   },
+  {
+    id: 'hangang',
+    label: '한강사업본부',
+    color: '#22c55e',
+    url: 'https://hangang.seoul.go.kr/www/board/list.do?boardSid=77&menuSid=113',
+    baseUrl: 'https://hangang.seoul.go.kr',
+    encoding: 'utf-8',
+  },
 ];
 
 const EMERGENCY_KEYWORDS = ['통제', '차단', '접근금지', '출입금지', '폐쇄', '위험', '경보', '주의보', '해제'];

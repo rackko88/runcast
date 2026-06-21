@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import styled from '@emotion/styled';
 import { theme } from '@runcast/ui';
 import type { WeatherData } from '@/types';
@@ -16,13 +17,30 @@ const Card = styled.div<{ $alert: boolean }>`
   top: 12px; right: 12px;
   background: ${theme.colors.white};
   border-radius: ${theme.radius.md};
-  padding: 10px 14px;
-  display: flex; flex-direction: column; gap: 6px;
   box-shadow: ${theme.shadows.md};
-  z-index: 50; min-width: 200px;
+  z-index: 50;
+  overflow: hidden;
   ${p => p.$alert && `outline: 2px solid ${theme.colors.blue};`}
 `;
-const Top = styled.div`display: flex; align-items: center; gap: 10px;`;
+const CollapseRow = styled.div`
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px 8px 14px; cursor: pointer;
+  min-width: 140px;
+`;
+const MiniIcon = styled.span`font-size: 20px; line-height: 1; flex-shrink: 0;`;
+const MiniTemp = styled.span`font-size: 17px; font-weight: 700; color: ${theme.colors.black}; flex: 1;`;
+const MiniDesc = styled.span`font-size: 11px; color: ${theme.colors.gray600};`;
+const ToggleBtn = styled.button`
+  background: none; border: none; cursor: pointer;
+  color: ${theme.colors.gray400}; font-size: 14px; padding: 0 4px;
+  line-height: 1; flex-shrink: 0;
+`;
+const Details = styled.div`
+  padding: 0 14px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  border-top: 1px solid ${theme.colors.gray100};
+`;
+const Top = styled.div`display: flex; align-items: center; gap: 10px; padding-top: 10px;`;
 const Icon = styled.span`font-size: 26px; line-height: 1; flex-shrink: 0;`;
 const Info = styled.div`display: flex; flex-direction: column; gap: 1px; flex: 1;`;
 const TempRow = styled.div`display: flex; align-items: baseline; gap: 6px;`;
@@ -39,6 +57,8 @@ const Rain = styled.div`font-size: 11px; color: ${theme.colors.blue}; font-weigh
 interface Props { weather: WeatherData | null; loading: boolean; }
 
 export default function WeatherFloat({ weather, loading }: Props) {
+  const [collapsed, setCollapsed] = useState(false);
+
   if (loading || !weather) return null;
 
   const isAlert = weather.isRaining || (weather.precipProbability ?? 0) >= 60;
@@ -46,35 +66,48 @@ export default function WeatherFloat({ weather, loading }: Props) {
 
   return (
     <Card $alert={isAlert}>
-      <Top>
-        <Icon>{weather.icon}</Icon>
-        <Info>
-          <TempRow>
-            <Temp>{weather.temperature}°</Temp>
-            {weather.tempMax != null && <Range>↑{weather.tempMax}° ↓{weather.tempMin}°</Range>}
-          </TempRow>
-          <Desc>{weather.description}</Desc>
-        </Info>
-        <Hum>💧{weather.humidity}%</Hum>
-      </Top>
+      <CollapseRow onClick={() => setCollapsed(v => !v)}>
+        <MiniIcon>{weather.icon}</MiniIcon>
+        <MiniTemp>{weather.temperature}°</MiniTemp>
+        {collapsed && <MiniDesc>{weather.description}</MiniDesc>}
+        <ToggleBtn onClick={e => { e.stopPropagation(); setCollapsed(v => !v); }}>
+          {collapsed ? '▼' : '▲'}
+        </ToggleBtn>
+      </CollapseRow>
 
-      {weather.sunrise && (
-        <Sun>
-          <span>🌅 {weather.sunrise}</span>
-          <span>🌇 {weather.sunset}</span>
-        </Sun>
-      )}
+      {!collapsed && (
+        <Details>
+          <Top>
+            <Icon>{weather.icon}</Icon>
+            <Info>
+              <TempRow>
+                <Temp>{weather.temperature}°</Temp>
+                {weather.tempMax != null && <Range>↑{weather.tempMax}° ↓{weather.tempMin}°</Range>}
+              </TempRow>
+              <Desc>{weather.description}</Desc>
+            </Info>
+            <Hum>💧{weather.humidity}%</Hum>
+          </Top>
 
-      {grade && (
-        <Air>
-          <AirGrade style={{ color: grade.color }}>● {grade.text}</AirGrade>
-          <AirVals>PM10 {weather.pm10} · PM2.5 {weather.pm25}㎍</AirVals>
-        </Air>
-      )}
+          {weather.sunrise && (
+            <Sun>
+              <span>🌅 {weather.sunrise}</span>
+              <span>🌇 {weather.sunset}</span>
+            </Sun>
+          )}
 
-      {weather.precipitation > 0 && <Rain>💧 {weather.precipitation}mm</Rain>}
-      {(weather.precipProbability ?? 0) > 0 && !weather.isRaining && (
-        <Rain>강수 {weather.precipProbability}%</Rain>
+          {grade && (
+            <Air>
+              <AirGrade style={{ color: grade.color }}>● {grade.text}</AirGrade>
+              <AirVals>PM10 {weather.pm10} · PM2.5 {weather.pm25}㎍</AirVals>
+            </Air>
+          )}
+
+          {weather.precipitation > 0 && <Rain>💧 {weather.precipitation}mm</Rain>}
+          {(weather.precipProbability ?? 0) > 0 && !weather.isRaining && (
+            <Rain>강수 {weather.precipProbability}%</Rain>
+          )}
+        </Details>
       )}
     </Card>
   );
