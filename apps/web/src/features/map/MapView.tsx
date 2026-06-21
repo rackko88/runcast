@@ -47,11 +47,15 @@ const MapWrapper = styled.div`position: relative; width: 100%; height: 100%;`;
 const MapContainer = styled.div`width: 100%; height: 100%;`;
 
 const MapLayerPanel = styled.div`
-  position: absolute; top: 12px; left: 12px; z-index: 100;
+  position: absolute; right: 16px; z-index: 100;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 16px + 44px + 10px);
   background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
   border-radius: 14px; padding: 10px 14px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.14);
   display: flex; flex-direction: column; gap: 8px; min-width: 110px;
+  @media (min-width: 768px) {
+    bottom: calc(16px + 44px + 10px);
+  }
 `;
 const LayerTitle = styled.div`
   font-size: 10px; font-weight: 700; color: #8B95A1; letter-spacing: 0.4px; text-transform: uppercase;
