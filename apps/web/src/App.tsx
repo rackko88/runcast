@@ -139,7 +139,7 @@ function AppLayout() {
     <AppRoot>
       <Sidebar>
         <AppHeader>
-          <AppTitle>🏃 러닝 환경 체크</AppTitle>
+          <AppTitle>🏃 런오케이?</AppTitle>
           <HeaderRight>
             {weather && !wLoading && <HeaderWeather>{weather.icon} {weather.temperature}°</HeaderWeather>}
             {alertCount > 0 && <AlertBadge>⚠️ {alertCount}곳 위험</AlertBadge>}
