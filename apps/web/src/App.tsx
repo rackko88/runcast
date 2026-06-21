@@ -101,7 +101,7 @@ const PcTabBadge = styled.span`
 const PcTabContent = styled.div`
   display: none;
   @media (min-width: ${theme.bp.pc}) {
-    display: flex; flex: 1; flex-direction: column; overflow: hidden; padding: 16px 20px;
+    display: flex; flex: 1; flex-direction: column; overflow-y: auto; padding: 16px 20px;
   }
 `;
 const AppBody = styled.main`
