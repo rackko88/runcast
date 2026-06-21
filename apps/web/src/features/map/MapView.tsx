@@ -172,6 +172,13 @@ export default function MapView({ location, riverData }: Props) {
     const map = mapInst.current;
     const overlays: { setMap: (v: null) => void }[] = [];
 
+    const ICON_SVG: Record<string, string> = {
+      '육상트랙': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+      '한강코스': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`,
+      '공원코스': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`,
+      '산악코스': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 4-8 4 4 4-4 4 8"/><path d="M2 17h20"/></svg>`,
+    };
+
     RUNNING_SPOTS.forEach(spot => {
       const cfg = TRACK_TYPE_CONFIG[spot.type];
       const pos = new K.LatLng(spot.lat, spot.lng);
@@ -180,18 +187,24 @@ export default function MapView({ location, riverData }: Props) {
       el.className = 'track-marker';
       el.style.background = cfg.color;
       el.style.cursor = 'pointer';
-      el.textContent = cfg.emoji;
+      el.innerHTML = ICON_SVG[spot.type] ?? '';
 
       const overlay = new K.CustomOverlay({ position: pos, content: el, map, zIndex: 4 });
 
       const distText = spot.distanceKm
-        ? (spot.type === '육상트랙' ? `400m 트랙` : `약 ${spot.distanceKm}km`)
+        ? (spot.type === '육상트랙' ? '400m 트랙' : `약 ${spot.distanceKm}km`)
         : '';
-      const html = `<div style="background:#fff;border-radius:14px;padding:14px 16px;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
+      const rows = [
+        distText && `<div style="font-size:13px;color:#3182F6;font-weight:600;margin-bottom:3px">📏 ${distText}</div>`,
+        spot.hours && `<div style="font-size:12px;color:#4E5968;margin-bottom:2px">🕐 ${spot.hours}</div>`,
+        spot.fee   && `<div style="font-size:12px;color:#4E5968;margin-bottom:2px">💰 ${spot.fee}</div>`,
+        spot.note  && `<div style="font-size:11px;color:#8B95A1;margin-top:2px">${spot.note}</div>`,
+      ].filter(Boolean).join('');
+
+      const html = `<div style="background:#fff;border-radius:14px;padding:14px 16px;min-width:190px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
         <div style="font-size:14px;font-weight:700;color:#191F28;margin-bottom:6px">${spot.name}</div>
-        <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:${cfg.color}22;color:${cfg.color};margin-bottom:8px">${cfg.emoji} ${cfg.label}</div>
-        ${distText ? `<div style="font-size:13px;color:#3182F6;font-weight:600;margin-bottom:4px">${distText}</div>` : ''}
-        ${spot.note ? `<div style="font-size:12px;color:#6B7684">${spot.note}</div>` : ''}
+        <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:${cfg.color}22;color:${cfg.color};margin-bottom:10px">${cfg.label}</div>
+        ${rows}
         <div style="font-size:11px;color:#B0B8C1;margin-top:8px;text-align:right">탭하면 닫힘</div>
       </div>`;
 
