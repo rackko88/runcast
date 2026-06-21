@@ -16,7 +16,8 @@ function pmGrade(pm10?: number, pm25?: number) {
 
 const Card = styled.div<{ $alert: boolean }>`
   position: absolute;
-  bottom: 12px; right: 12px;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 12px);
+  right: 12px;
   background: ${theme.colors.white};
   border-radius: ${theme.radius.md};
   box-shadow: ${theme.shadows.md};

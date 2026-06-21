@@ -63,7 +63,8 @@ const ToggleChip = styled.label`
   cursor: pointer; user-select: none;
 `;
 const LocBtn = styled.button`
-  position: absolute; bottom: 16px; right: 16px; z-index: 100;
+  position: absolute; right: 16px; z-index: 100;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 16px);
   width: 44px; height: 44px; border-radius: 50%;
   background: #fff; border: none;
   box-shadow: 0 2px 14px rgba(0,0,0,0.18);
@@ -71,11 +72,19 @@ const LocBtn = styled.button`
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.12s;
   &:active { transform: scale(0.92); }
+  @media (min-width: 768px) {
+    bottom: 16px;
+  }
 `;
 
 // React 팝업 — Kakao 이벤트 시스템 밖에서 렌더링
 const PopupOverlay = styled.div`
-  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+  position: absolute;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 16px);
+  left: 50%; transform: translateX(-50%);
+  @media (min-width: 768px) {
+    bottom: 80px;
+  }
   z-index: 200; max-width: calc(100% - 32px);
 `;
 const PopupCard = styled.div`
