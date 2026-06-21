@@ -16,16 +16,12 @@ function pmGrade(pm10?: number, pm25?: number) {
 
 const Card = styled.div<{ $alert: boolean }>`
   position: absolute;
-  bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 12px);
-  right: 12px;
+  top: 12px; right: 12px;
   background: ${theme.colors.white};
   border-radius: ${theme.radius.md};
   box-shadow: ${theme.shadows.md};
   z-index: 50;
   ${p => p.$alert && `outline: 2px solid ${theme.colors.blue};`}
-  @media (min-width: ${theme.bp.pc}) {
-    top: 12px; bottom: auto;
-  }
 `;
 
 /* 접힌 상태 */
