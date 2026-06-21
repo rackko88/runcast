@@ -324,7 +324,7 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
     <MapWrapper>
       <MapContainer ref={mapRef} />
       <MapLayerPanel>
-        <LayerTitle>레이어</LayerTitle>
+        <LayerTitle>표시</LayerTitle>
         <ToggleChip>
           <input type="checkbox" checked={showTracks} onChange={e => setShowTracks(e.target.checked)} style={{ accentColor: '#7c3aed' }} />
           러닝 스팟
