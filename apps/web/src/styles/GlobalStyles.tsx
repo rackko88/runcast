@@ -30,6 +30,18 @@ const globals = css`
     border-radius: 50%;
     box-shadow: 0 1px 4px rgba(0,0,0,0.25);
   }
+  .track-marker {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+  }
 `;
 
 export function GlobalStyles() {

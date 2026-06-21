@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { RIVER_PATHS, RIVER_COLORS } from '../river/rivers';
+import { RUNNING_SPOTS, TRACK_TYPE_CONFIG } from '../track/tracks';
 import type { RiverStation, RiverStatus } from '@/types';
 
 declare global {
@@ -163,6 +164,47 @@ export default function MapView({ location, riverData }: Props) {
       overlays.forEach(o => o.setMap(null));
     };
   }, [mapReady, riverData]);
+
+  // 러닝 스팟 마커
+  useEffect(() => {
+    if (!mapReady) return;
+    const K = window.kakao.maps;
+    const map = mapInst.current;
+    const overlays: { setMap: (v: null) => void }[] = [];
+
+    RUNNING_SPOTS.forEach(spot => {
+      const cfg = TRACK_TYPE_CONFIG[spot.type];
+      const pos = new K.LatLng(spot.lat, spot.lng);
+
+      const el = document.createElement('div');
+      el.className = 'track-marker';
+      el.style.background = cfg.color;
+      el.style.cursor = 'pointer';
+      el.textContent = cfg.emoji;
+
+      const overlay = new K.CustomOverlay({ position: pos, content: el, map, zIndex: 4 });
+
+      const distText = spot.distanceKm
+        ? (spot.type === '육상트랙' ? `400m 트랙` : `약 ${spot.distanceKm}km`)
+        : '';
+      const html = `<div style="background:#fff;border-radius:14px;padding:14px 16px;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
+        <div style="font-size:14px;font-weight:700;color:#191F28;margin-bottom:6px">${spot.name}</div>
+        <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:${cfg.color}22;color:${cfg.color};margin-bottom:8px">${cfg.emoji} ${cfg.label}</div>
+        ${distText ? `<div style="font-size:13px;color:#3182F6;font-weight:600;margin-bottom:4px">${distText}</div>` : ''}
+        ${spot.note ? `<div style="font-size:12px;color:#6B7684">${spot.note}</div>` : ''}
+        <div style="font-size:11px;color:#B0B8C1;margin-top:8px;text-align:right">탭하면 닫힘</div>
+      </div>`;
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const ov = overlayRef.current as { setContent: (h: string) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
+        ov.setContent(html); ov.setPosition(pos); ov.setMap(map);
+      });
+      overlays.push(overlay);
+    });
+
+    return () => overlays.forEach(o => o.setMap(null));
+  }, [mapReady]);
 
   function goToMyLocation() {
     if (!location || !mapInst.current) return;
