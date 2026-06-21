@@ -35,8 +35,17 @@ function getRiverStatus(riverName: string, riverData: RiverStation[]): RiverStat
   return '정상';
 }
 
+// ── 팝업 타입 ──
+type PopupData =
+  | { kind: 'river'; name: string; status: RiverStatus; color: string; stations: RiverStation[] }
+  | { kind: 'station'; station: RiverStation; color: string }
+  | { kind: 'spot'; spot: typeof RUNNING_SPOTS[0]; kakaoUrl: string; naverUrl: string }
+  | { kind: 'cctv'; spot: typeof CCTV_SPOTS[0] };
+
+// ── 스타일 ──
 const MapWrapper = styled.div`position: relative; width: 100%; height: 100%;`;
 const MapContainer = styled.div`width: 100%; height: 100%;`;
+
 const MapLayerPanel = styled.div`
   position: absolute; top: 12px; left: 12px; z-index: 100;
   background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
@@ -64,6 +73,31 @@ const LocBtn = styled.button`
   &:active { transform: scale(0.92); }
 `;
 
+// React 팝업 — Kakao 이벤트 시스템 밖에서 렌더링
+const PopupOverlay = styled.div`
+  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+  z-index: 200; max-width: calc(100% - 32px);
+`;
+const PopupCard = styled.div`
+  background: #fff; border-radius: 16px; padding: 16px;
+  min-width: 230px; box-shadow: 0 4px 24px rgba(0,0,0,0.16);
+  font-family: -apple-system, 'Noto Sans KR', sans-serif;
+  position: relative;
+`;
+const PopupClose = styled.button`
+  position: absolute; top: 10px; right: 10px;
+  background: none; border: none; font-size: 16px; color: #8B95A1;
+  cursor: pointer; line-height: 1; padding: 2px 6px;
+`;
+const PopupTitle = styled.div`font-size: 14px; font-weight: 700; color: #191F28; margin-bottom: 8px; padding-right: 24px;`;
+const PopupRow = styled.div`display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #F2F4F6; font-size: 12px;`;
+const PopupMeta = styled.div`font-size: 12px; color: #4E5968; line-height: 1.8; margin-bottom: 8px;`;
+const PopupBtnRow = styled.div`display: flex; gap: 6px; margin-top: 10px;`;
+const PopupLink = styled.a`
+  flex: 1; text-align: center; padding: 7px 0; border-radius: 8px;
+  font-size: 11px; font-weight: 700; text-decoration: none; display: block;
+`;
+
 interface Props {
   location: { lat: number; lng: number } | null;
   riverData: RiverStation[];
@@ -72,13 +106,14 @@ interface Props {
 }
 
 export default function MapView({ location, riverData, moveToRef, getMapCenterRef }: Props) {
-  const mapRef     = useRef<HTMLDivElement>(null);
-  const mapInst    = useRef<unknown>(null);
-  const overlayRef = useRef<unknown>(null);
+  const mapRef  = useRef<HTMLDivElement>(null);
+  const mapInst = useRef<unknown>(null);
   const [mapReady, setMapReady]     = useState(false);
   const [showTracks, setShowTracks] = useState(false);
   const [showCctv, setShowCctv]     = useState(false);
+  const [popup, setPopup] = useState<PopupData | null>(null);
 
+  // ── 지도 초기화 ──
   useEffect(() => {
     if (mapInst.current || !mapRef.current) return;
     let cancelled = false;
@@ -88,8 +123,7 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
         const maps = K as typeof window.kakao.maps;
         const map = new maps.Map(mapRef.current, { center: new maps.LatLng(37.5665, 126.978), level: 6 });
         mapInst.current = map;
-        overlayRef.current = new maps.CustomOverlay({ zIndex: 10, yAnchor: 1.15 });
-        maps.event.addListener(map, 'click', () => (overlayRef.current as { setMap: (v: null) => void }).setMap(null));
+        maps.event.addListener(map, 'click', () => setPopup(null));
         setMapReady(true);
       })
       .catch(err => console.error('지도 초기화 실패:', err));
@@ -103,6 +137,7 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
     return () => ro.disconnect();
   }, [mapReady]);
 
+  // ── 내 위치 마커 ──
   useEffect(() => {
     if (!mapReady || !location) return;
     const K = window.kakao.maps;
@@ -116,6 +151,7 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
     return () => marker.setMap(null);
   }, [mapReady, location]);
 
+  // ── 하천 라인 + 관측소 마커 ──
   useEffect(() => {
     if (!mapReady) return;
     const K = window.kakao.maps;
@@ -123,270 +159,186 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
     const overlays: { setMap: (v: null) => void }[] = [];
     const polylines: { setMap: (v: null) => void }[] = [];
 
-    function showPopup(html: string, position: unknown) {
-      const ov = overlayRef.current as { setContent: (h: HTMLElement) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
-      const el = document.createElement('div');
-      el.innerHTML = html;
-      K.event.preventMap(el);
-      ov.setContent(el);
-      ov.setPosition(position);
-      ov.setMap(map);
-    }
-
     Object.entries(RIVER_PATHS).forEach(([name, coords]) => {
       const status = getRiverStatus(name, riverData);
       const color  = RIVER_COLORS[status];
       const path   = coords.map(([la, ln]) => new K.LatLng(la, ln));
-
       const line = new K.Polyline({ map, path, strokeWeight: name === '한강' ? 5 : 3, strokeColor: color, strokeOpacity: 0.85, strokeStyle: 'solid' });
       const hit  = new K.Polyline({ map, path, strokeWeight: 20, strokeColor: '#fff', strokeOpacity: 0 });
-
       const stations = riverData.filter(s => s.river === name);
-      const rows = stations.map(s => `
-        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F2F4F6;">
-          <span style="font-size:13px;color:#333">${s.name}</span>
-          <span style="font-size:13px;font-weight:600;color:${RIVER_COLORS[s.status]}">
-            ${s.waterLevel != null ? s.waterLevel.toFixed(2) + 'm' : '-'} · ${s.status}
-          </span>
-        </div>`).join('');
-
-      const html = `<div style="background:#fff;border-radius:16px;padding:16px;min-width:230px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
-        <div style="font-size:16px;font-weight:700;color:#191F28;margin-bottom:12px;">${name} <span style="font-size:12px;font-weight:600;color:${color};margin-left:6px">${status}</span></div>
-        ${rows}
-        <div style="font-size:11px;color:#B0B8C1;margin-top:8px;text-align:right">탭하면 닫힘</div>
-      </div>`;
-
-      K.event.addListener(hit, 'click', (e: { latLng: unknown }) => showPopup(html, e.latLng));
+      K.event.addListener(hit, 'click', () => setPopup({ kind: 'river', name, status, color, stations }));
       polylines.push(line, hit);
     });
 
     riverData.forEach(station => {
       const color = RIVER_COLORS[station.status] || '#8B95A1';
       const pos   = new K.LatLng(station.lat, station.lng);
-
-      const dot = document.createElement('div');
+      const dot   = document.createElement('div');
       dot.className = 'station-marker';
       dot.style.background = color;
       dot.style.cursor = 'pointer';
-
-      const overlay = new K.CustomOverlay({ position: pos, content: dot, map, zIndex: 5 });
-
-      const html = `<div style="background:#fff;border-radius:14px;padding:14px 16px;min-width:190px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
-        <div style="font-size:14px;font-weight:700;color:#191F28;margin-bottom:8px">${station.name}</div>
-        <div style="font-size:13px;color:#4E5968;line-height:2">
-          수위 <b style="color:#191F28">${station.waterLevel != null ? station.waterLevel.toFixed(2) + 'm' : '-'}</b>
-          &nbsp;·&nbsp; 상태 <b style="color:${color}">${station.status}</b><br/>
-          주의 ${station.warnLevel}m &nbsp;|&nbsp; 위험 ${station.dangerLevel}m
-        </div>
-      </div>`;
-
-      dot.addEventListener('click', (e) => { e.stopPropagation(); showPopup(html, pos); });
-      overlays.push(overlay);
+      dot.addEventListener('click', (e) => { e.stopPropagation(); setPopup({ kind: 'station', station, color }); });
+      overlays.push(new K.CustomOverlay({ position: pos, content: dot, map, zIndex: 5 }));
     });
 
-    return () => {
-      polylines.forEach(p => p.setMap(null));
-      overlays.forEach(o => o.setMap(null));
-    };
+    return () => { polylines.forEach(p => p.setMap(null)); overlays.forEach(o => o.setMap(null)); };
   }, [mapReady, riverData]);
 
-  // 러닝 스팟 마커
+  // ── 러닝 스팟 마커 ──
   useEffect(() => {
-    if (!mapReady) return;
+    if (!mapReady || !showTracks) return;
     const K = window.kakao.maps;
     const map = mapInst.current;
     const overlays: { setMap: (v: null) => void }[] = [];
 
     const S = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">`;
     const ICON_SVG: Record<string, string> = {
-      // Activity (운동 심박) — 육상트랙
       '육상트랙': `${S}<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-      // Water drop — 한강코스
       '한강코스': `${S}<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
-      // Leaf — 공원코스
       '공원코스': `${S}<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`,
-      // Mountain range — 산악코스
       '산악코스': `${S}<path d="M3 20l5-8 4 4 4-4 6 8H3z"/></svg>`,
     };
-
-    if (!showTracks) return;
 
     RUNNING_SPOTS.forEach(spot => {
       const cfg = TRACK_TYPE_CONFIG[spot.type];
       const pos = new K.LatLng(spot.lat, spot.lng);
-
-      const el = document.createElement('div');
+      const el  = document.createElement('div');
       el.className = 'track-marker';
       el.style.background = cfg.color;
       el.style.cursor = 'pointer';
       el.innerHTML = ICON_SVG[spot.type] ?? '';
-
-      const overlay = new K.CustomOverlay({ position: pos, content: el, map, zIndex: 4 });
-
-      const distText = spot.distanceKm
-        ? (spot.type === '육상트랙' ? '400m 트랙' : `약 ${spot.distanceKm}km`)
-        : '';
-      const rows = [
-        distText && `<div style="font-size:13px;color:#3182F6;font-weight:600;margin-bottom:3px">📏 ${distText}</div>`,
-        spot.hours && `<div style="font-size:12px;color:#4E5968;margin-bottom:2px">🕐 ${spot.hours}</div>`,
-        spot.fee   && `<div style="font-size:12px;color:#4E5968;margin-bottom:2px">💰 ${spot.fee}</div>`,
-        spot.note  && `<div style="font-size:11px;color:#8B95A1;margin-top:2px">${spot.note}</div>`,
-      ].filter(Boolean).join('');
-
       const kakaoUrl = `https://map.kakao.com/link/to/${encodeURIComponent(spot.name)},${spot.lat},${spot.lng}`;
-      const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(spot.name)}?c=${spot.lng},${spot.lat},16,0,0,0,dh`;
-
-      const html = `<div style="background:#fff;border-radius:14px;padding:14px 16px;min-width:200px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
-        <div style="font-size:14px;font-weight:700;color:#191F28;margin-bottom:6px">${spot.name}</div>
-        <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:${cfg.color}22;color:${cfg.color};margin-bottom:10px">${cfg.label}</div>
-        ${rows}
-        <div style="display:flex;gap:6px;margin-top:10px">
-          <a href="${kakaoUrl}" target="_blank" rel="noopener"
-             style="flex:1;text-align:center;padding:6px 0;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;background:#FAE100;color:#3A1D1D">
-            카카오맵
-          </a>
-          <a href="${naverUrl}" target="_blank" rel="noopener"
-             style="flex:1;text-align:center;padding:6px 0;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;background:#03C75A;color:#fff">
-            네이버지도
-          </a>
-        </div>
-      </div>`;
-
-      // DOM으로 팝업 구성 — iOS PWA에서 innerHTML anchor는 동작 안 함
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const ov = overlayRef.current as { setContent: (h: HTMLElement) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
-
-        const wrap = document.createElement('div');
-        Object.assign(wrap.style, { background:'#fff', borderRadius:'14px', padding:'14px 16px', minWidth:'200px', boxShadow:'0 4px 20px rgba(0,0,0,0.12)', fontFamily:"-apple-system,'Noto Sans KR',sans-serif" });
-
-        const title = document.createElement('div');
-        Object.assign(title.style, { fontSize:'14px', fontWeight:'700', color:'#191F28', marginBottom:'6px' });
-        title.textContent = spot.name;
-
-        const badge = document.createElement('div');
-        Object.assign(badge.style, { display:'inline-block', fontSize:'10px', fontWeight:'700', padding:'2px 7px', borderRadius:'8px', background:`${cfg.color}22`, color:cfg.color, marginBottom:'10px' });
-        badge.textContent = cfg.label;
-
-        const info = document.createElement('div');
-        info.style.fontSize = '12px';
-        info.style.color = '#4E5968';
-        info.style.lineHeight = '1.8';
-        if (distText) { const d = document.createElement('div'); d.style.color='#3182F6'; d.style.fontWeight='600'; d.textContent=`📏 ${distText}`; info.appendChild(d); }
-        if (spot.hours) { const d = document.createElement('div'); d.textContent=`🕐 ${spot.hours}`; info.appendChild(d); }
-        if (spot.fee)   { const d = document.createElement('div'); d.textContent=`💰 ${spot.fee}`;   info.appendChild(d); }
-        if (spot.note)  { const d = document.createElement('div'); d.style.color='#8B95A1'; d.style.fontSize='11px'; d.textContent=spot.note; info.appendChild(d); }
-
-        const btnRow = document.createElement('div');
-        Object.assign(btnRow.style, { display:'flex', gap:'6px', marginTop:'10px' });
-
-        const makeLink = (label: string, url: string, bg: string, color: string) => {
-          const a = document.createElement('a');
-          a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-          Object.assign(a.style, { flex:'1', textAlign:'center', padding:'7px 0', borderRadius:'8px', fontSize:'11px', fontWeight:'700', textDecoration:'none', background:bg, color, cursor:'pointer', display:'block' });
-          a.textContent = label;
-          K.event.preventMap(a);
-          return a;
-        };
-        btnRow.appendChild(makeLink('카카오맵', kakaoUrl, '#FAE100', '#3A1D1D'));
-        btnRow.appendChild(makeLink('네이버지도', naverUrl, '#03C75A', '#fff'));
-
-        wrap.appendChild(title);
-        wrap.appendChild(badge);
-        wrap.appendChild(info);
-        wrap.appendChild(btnRow);
-
-        K.event.preventMap(wrap);
-        ov.setContent(wrap); ov.setPosition(pos); ov.setMap(map);
-      });
-      overlays.push(overlay);
+      const naverUrl = `https://map.naver.com/v5/directions/#/${spot.lng},${spot.lat},${encodeURIComponent(spot.name)}`;
+      el.addEventListener('click', (e) => { e.stopPropagation(); setPopup({ kind: 'spot', spot, kakaoUrl, naverUrl }); });
+      overlays.push(new K.CustomOverlay({ position: pos, content: el, map, zIndex: 4 }));
     });
 
     return () => overlays.forEach(o => o.setMap(null));
   }, [mapReady, showTracks]);
 
-  // CCTV 마커
+  // ── CCTV 마커 ──
   useEffect(() => {
-    if (!mapReady) return;
+    if (!mapReady || !showCctv) return;
     const K = window.kakao.maps;
     const map = mapInst.current;
     const overlays: { setMap: (v: null) => void }[] = [];
-
-    if (!showCctv) return;
-
     const camSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>`;
 
     CCTV_SPOTS.forEach(spot => {
       const pos = new K.LatLng(spot.lat, spot.lng);
-      const el = document.createElement('div');
+      const el  = document.createElement('div');
       el.className = 'cctv-marker';
       el.style.cursor = 'pointer';
       el.innerHTML = camSvg;
-
-      const overlay = new K.CustomOverlay({ position: pos, content: el, map, zIndex: 3 });
-
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const ov = overlayRef.current as { setContent: (h: HTMLElement) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
-
-        const wrap = document.createElement('div');
-        Object.assign(wrap.style, { background:'#fff', borderRadius:'12px', padding:'12px 14px', minWidth:'170px', boxShadow:'0 4px 16px rgba(0,0,0,0.12)', fontFamily:"-apple-system,'Noto Sans KR',sans-serif" });
-
-        const nameEl = document.createElement('div');
-        Object.assign(nameEl.style, { fontSize:'13px', fontWeight:'700', color:'#191F28', marginBottom:'10px' });
-        nameEl.textContent = `📹 ${spot.name}`;
-
-        const link = document.createElement('a');
-        link.href = spot.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
-        Object.assign(link.style, { display:'inline-block', fontSize:'12px', fontWeight:'600', color:'#fff', background:'#3182F6', padding:'6px 14px', borderRadius:'8px', textDecoration:'none' });
-        link.textContent = '영상 보기 →';
-        K.event.preventMap(link);
-
-        const hint = document.createElement('div');
-        Object.assign(hint.style, { fontSize:'10px', color:'#B0B8C1', marginTop:'6px' });
-        hint.textContent = '외부 사이트로 이동합니다';
-
-        wrap.appendChild(nameEl);
-        wrap.appendChild(link);
-        wrap.appendChild(hint);
-
-        K.event.preventMap(wrap);
-        ov.setContent(wrap); ov.setPosition(pos); ov.setMap(map);
-      });
-      overlays.push(overlay);
+      el.addEventListener('click', (e) => { e.stopPropagation(); setPopup({ kind: 'cctv', spot }); });
+      overlays.push(new K.CustomOverlay({ position: pos, content: el, map, zIndex: 3 }));
     });
 
     return () => overlays.forEach(o => o.setMap(null));
   }, [mapReady, showCctv]);
 
-  function goToMyLocation() {
-    if (!location || !mapInst.current) return;
-    const K = window.kakao.maps;
-    (mapInst.current as { setCenter: (v: unknown) => void }).setCenter(new K.LatLng(location.lat, location.lng));
-  }
-
-  // 외부에서 지도 이동 요청 (하천현황 클릭 등)
+  // ── 외부 ref ──
   useEffect(() => {
     if (!moveToRef) return;
     moveToRef.current = (lat, lng) => {
       if (!mapInst.current) return;
       const K = window.kakao.maps;
-      (mapInst.current as { setCenter: (v: unknown) => void; setLevel: (v: number) => void })
-        .setCenter(new K.LatLng(lat, lng));
+      (mapInst.current as { setCenter: (v: unknown) => void; setLevel: (v: number) => void }).setCenter(new K.LatLng(lat, lng));
       (mapInst.current as { setLevel: (v: number) => void }).setLevel(4);
     };
   }, [mapReady, moveToRef]);
 
-  // 지도 중심 좌표 반환 함수 노출
   useEffect(() => {
     if (!getMapCenterRef) return;
     getMapCenterRef.current = () => {
       if (!mapInst.current) return null;
       const K = window.kakao.maps;
-      const center = (mapInst.current as { getCenter: () => unknown }).getCenter();
-      return { lat: (center as { getLat: () => number }).getLat(), lng: (center as { getLng: () => number }).getLng() };
+      const c = (mapInst.current as { getCenter: () => unknown }).getCenter();
+      return { lat: (c as { getLat: () => number }).getLat(), lng: (c as { getLng: () => number }).getLng() };
     };
   }, [mapReady, getMapCenterRef]);
+
+  function goToMyLocation() {
+    if (!location || !mapInst.current) return;
+    (mapInst.current as { setCenter: (v: unknown) => void }).setCenter(new window.kakao.maps.LatLng(location.lat, location.lng));
+  }
+
+  // ── 팝업 렌더 ──
+  function renderPopup() {
+    if (!popup) return null;
+
+    let content: React.ReactNode = null;
+
+    if (popup.kind === 'river') {
+      content = (
+        <>
+          <PopupTitle>{popup.name} <span style={{ fontSize: 12, fontWeight: 600, color: popup.color }}>{popup.status}</span></PopupTitle>
+          {popup.stations.map(s => (
+            <PopupRow key={s.id}>
+              <span style={{ color: '#333' }}>{s.name}</span>
+              <span style={{ fontWeight: 600, color: RIVER_COLORS[s.status] }}>
+                {s.waterLevel != null ? `${s.waterLevel.toFixed(2)}m` : '-'} · {s.status}
+              </span>
+            </PopupRow>
+          ))}
+          <div style={{ fontSize: 10, color: '#B0B8C1', marginTop: 8, textAlign: 'right' }}>닫기 ✕</div>
+        </>
+      );
+    } else if (popup.kind === 'station') {
+      const s = popup.station;
+      content = (
+        <>
+          <PopupTitle>{s.name}</PopupTitle>
+          <PopupMeta>
+            수위 <b style={{ color: '#191F28' }}>{s.waterLevel != null ? `${s.waterLevel.toFixed(2)}m` : '-'}</b>
+            &nbsp;·&nbsp; 상태 <b style={{ color: popup.color }}>{s.status}</b><br />
+            주의 {s.warnLevel}m &nbsp;|&nbsp; 위험 {s.dangerLevel}m
+          </PopupMeta>
+        </>
+      );
+    } else if (popup.kind === 'spot') {
+      const { spot, kakaoUrl, naverUrl } = popup;
+      const cfg = TRACK_TYPE_CONFIG[spot.type];
+      const distText = spot.distanceKm ? (spot.type === '육상트랙' ? '400m 트랙' : `약 ${spot.distanceKm}km`) : '';
+      content = (
+        <>
+          <PopupTitle>{spot.name}</PopupTitle>
+          <div style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 8, background: `${cfg.color}22`, color: cfg.color, marginBottom: 10 }}>{cfg.label}</div>
+          <PopupMeta>
+            {distText && <div style={{ color: '#3182F6', fontWeight: 600 }}>📏 {distText}</div>}
+            {spot.hours && <div>🕐 {spot.hours}</div>}
+            {spot.fee   && <div>💰 {spot.fee}</div>}
+            {spot.note  && <div style={{ color: '#8B95A1', fontSize: 11 }}>{spot.note}</div>}
+          </PopupMeta>
+          <PopupBtnRow>
+            <PopupLink href={kakaoUrl} target="_blank" rel="noopener noreferrer" style={{ background: '#FAE100', color: '#3A1D1D' }}>카카오맵</PopupLink>
+            <PopupLink href={naverUrl} target="_blank" rel="noopener noreferrer" style={{ background: '#03C75A', color: '#fff' }}>네이버지도</PopupLink>
+          </PopupBtnRow>
+        </>
+      );
+    } else if (popup.kind === 'cctv') {
+      content = (
+        <>
+          <PopupTitle>📹 {popup.spot.name}</PopupTitle>
+          <PopupBtnRow>
+            <PopupLink href={popup.spot.url} target="_blank" rel="noopener noreferrer" style={{ background: '#3182F6', color: '#fff', flex: 'none', padding: '7px 16px' }}>
+              영상 보기 →
+            </PopupLink>
+          </PopupBtnRow>
+          <div style={{ fontSize: 10, color: '#B0B8C1', marginTop: 6 }}>외부 사이트로 이동합니다</div>
+        </>
+      );
+    }
+
+    return (
+      <PopupOverlay>
+        <PopupCard>
+          <PopupClose onClick={() => setPopup(null)}>✕</PopupClose>
+          {content}
+        </PopupCard>
+      </PopupOverlay>
+    );
+  }
 
   return (
     <MapWrapper>
@@ -405,6 +357,7 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
       {location && mapReady && (
         <LocBtn onClick={goToMyLocation} title="현재 위치로">📍</LocBtn>
       )}
+      {renderPopup()}
     </MapWrapper>
   );
 }
