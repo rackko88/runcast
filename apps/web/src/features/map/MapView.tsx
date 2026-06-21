@@ -3,7 +3,7 @@ import type React from 'react';
 import styled from '@emotion/styled';
 import { RIVER_PATHS, RIVER_COLORS } from '../river/rivers';
 import { RUNNING_SPOTS, TRACK_TYPE_CONFIG } from '../track/tracks';
-import { CCTV_SPOTS } from '../cctv/cctvs';
+
 import type { RiverStation, RiverStatus } from '@/types';
 
 declare global {
@@ -40,7 +40,7 @@ type PopupData =
   | { kind: 'river'; name: string; status: RiverStatus; color: string; stations: RiverStation[] }
   | { kind: 'station'; station: RiverStation; color: string }
   | { kind: 'spot'; spot: typeof RUNNING_SPOTS[0]; kakaoUrl: string; naverUrl: string }
-  | { kind: 'cctv'; spot: typeof CCTV_SPOTS[0] };
+;
 
 // ── 스타일 ──
 const MapWrapper = styled.div`position: relative; width: 100%; height: 100%;`;
@@ -110,7 +110,6 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
   const mapInst = useRef<unknown>(null);
   const [mapReady, setMapReady]     = useState(false);
   const [showTracks, setShowTracks] = useState(false);
-  const [showCctv, setShowCctv]     = useState(false);
   const [popup, setPopup] = useState<PopupData | null>(null);
 
   // ── 지도 초기화 ──
@@ -216,26 +215,6 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
     return () => overlays.forEach(o => o.setMap(null));
   }, [mapReady, showTracks]);
 
-  // ── CCTV 마커 ──
-  useEffect(() => {
-    if (!mapReady || !showCctv) return;
-    const K = window.kakao.maps;
-    const map = mapInst.current;
-    const overlays: { setMap: (v: null) => void }[] = [];
-    const camSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>`;
-
-    CCTV_SPOTS.forEach(spot => {
-      const pos = new K.LatLng(spot.lat, spot.lng);
-      const el  = document.createElement('div');
-      el.className = 'cctv-marker';
-      el.style.cursor = 'pointer';
-      el.innerHTML = camSvg;
-      el.addEventListener('click', (e) => { e.stopPropagation(); setPopup({ kind: 'cctv', spot }); });
-      overlays.push(new K.CustomOverlay({ position: pos, content: el, map, zIndex: 3 }));
-    });
-
-    return () => overlays.forEach(o => o.setMap(null));
-  }, [mapReady, showCctv]);
 
   // ── 외부 ref ──
   useEffect(() => {
@@ -316,18 +295,6 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
           </PopupBtnRow>
         </>
       );
-    } else if (popup.kind === 'cctv') {
-      content = (
-        <>
-          <PopupTitle>📹 {popup.spot.name}</PopupTitle>
-          <PopupBtnRow>
-            <PopupLink href={popup.spot.url} target="_blank" rel="noopener noreferrer" style={{ background: '#3182F6', color: '#fff', flex: 'none', padding: '7px 16px' }}>
-              영상 보기 →
-            </PopupLink>
-          </PopupBtnRow>
-          <div style={{ fontSize: 10, color: '#B0B8C1', marginTop: 6 }}>외부 사이트로 이동합니다</div>
-        </>
-      );
     }
 
     return (
@@ -348,10 +315,6 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
         <ToggleChip>
           <input type="checkbox" checked={showTracks} onChange={e => setShowTracks(e.target.checked)} style={{ accentColor: '#7c3aed' }} />
           러닝 스팟
-        </ToggleChip>
-        <ToggleChip>
-          <input type="checkbox" checked={showCctv} onChange={e => setShowCctv(e.target.checked)} style={{ accentColor: '#e11d48' }} />
-          CCTV
         </ToggleChip>
       </MapLayerPanel>
       {location && mapReady && (
