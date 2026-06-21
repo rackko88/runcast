@@ -19,6 +19,7 @@ export interface DailyWeather {
   tempMax: number;
   tempMin: number;
   precipProbabilityMax: number;
+  precipSum: number;
   icon: string;
   description: string;
 }

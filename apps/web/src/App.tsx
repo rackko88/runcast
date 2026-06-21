@@ -116,6 +116,7 @@ function AppLayout() {
   const sidebarTab = activeTab === 'map' ? 'river' : activeTab;
 
   const { location, error: locError } = useLocationStore();
+  const locationLabel = !location ? '위치 확인 중' : locError ? '서울 시청 기준' : '내 위치 기준';
   const { weather, loading: wLoading } = useWeather(location);
   const { riverData, loading: rLoading, isMock, lastUpdated, refresh } = useRiverData();
   const { notices, loading: nLoading, lastUpdated: nUpdated, refresh: nRefresh } = useNotices();
@@ -127,12 +128,12 @@ function AppLayout() {
     switch (tab) {
       case 'river':   return <RiverDetail riverData={riverData} loading={rLoading} isMock={isMock} lastUpdated={lastUpdated} onRefresh={refresh} />;
       case 'notice':  return <NoticeBoard notices={notices} loading={nLoading} lastUpdated={nUpdated} onRefresh={nRefresh} />;
-      case 'weather': return <WeatherDetail weather={weather} loading={wLoading} />;
+      case 'weather': return <WeatherDetail weather={weather} loading={wLoading} locationLabel={locationLabel} />;
       default:        return null;
     }
   }
 
-  const ctx = { weather, wLoading, riverData, rLoading, isMock, lastUpdated, refresh, notices, nLoading, nUpdated, nRefresh };
+  const ctx = { weather, wLoading, locationLabel, riverData, rLoading, isMock, lastUpdated, refresh, notices, nLoading, nUpdated, nRefresh };
 
   return (
     <AppRoot>
