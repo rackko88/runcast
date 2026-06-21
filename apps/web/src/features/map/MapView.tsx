@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { RIVER_PATHS, RIVER_COLORS } from '../river/rivers';
 import { RUNNING_SPOTS, TRACK_TYPE_CONFIG } from '../track/tracks';
+import { CCTV_SPOTS } from '../cctv/cctvs';
 import type { RiverStation, RiverStatus } from '@/types';
 
 declare global {
@@ -35,8 +36,11 @@ function getRiverStatus(riverName: string, riverData: RiverStation[]): RiverStat
 
 const MapWrapper = styled.div`position: relative; width: 100%; height: 100%;`;
 const MapContainer = styled.div`width: 100%; height: 100%;`;
-const TrackToggle = styled.label`
+const MapToggles = styled.div`
   position: absolute; bottom: 70px; right: 12px; z-index: 100;
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+`;
+const ToggleChip = styled.label`
   background: #fff; border-radius: 20px; padding: 6px 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   display: flex; align-items: center; gap: 6px;
@@ -63,8 +67,9 @@ export default function MapView({ location, riverData }: Props) {
   const mapRef     = useRef<HTMLDivElement>(null);
   const mapInst    = useRef<unknown>(null);
   const overlayRef = useRef<unknown>(null);
-  const [mapReady, setMapReady]   = useState(false);
+  const [mapReady, setMapReady]     = useState(false);
   const [showTracks, setShowTracks] = useState(false);
+  const [showCctv, setShowCctv]     = useState(false);
 
   useEffect(() => {
     if (mapInst.current || !mapRef.current) return;
@@ -181,11 +186,16 @@ export default function MapView({ location, riverData }: Props) {
     const map = mapInst.current;
     const overlays: { setMap: (v: null) => void }[] = [];
 
+    const S = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">`;
     const ICON_SVG: Record<string, string> = {
-      '육상트랙': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
-      '한강코스': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`,
-      '공원코스': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`,
-      '산악코스': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 4-8 4 4 4-4 4 8"/><path d="M2 17h20"/></svg>`,
+      // Timer (스톱워치) — 육상트랙
+      '육상트랙': `${S}<circle cx="12" cy="14" r="8"/><path d="M12 6v8l3 2"/><path d="M10 2h4"/></svg>`,
+      // Waves — 한강코스
+      '한강코스': `${S}<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`,
+      // Tree (삼각형 나무) — 공원코스
+      '공원코스': `${S}<polygon points="12 3 21 19 3 19" stroke-linejoin="round"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`,
+      // Mountain — 산악코스
+      '산악코스': `${S}<path d="m3 17 4-8 4 4 4-4 4 8"/><path d="M2 17h20"/></svg>`,
     };
 
     if (!showTracks) return;
@@ -230,6 +240,43 @@ export default function MapView({ location, riverData }: Props) {
     return () => overlays.forEach(o => o.setMap(null));
   }, [mapReady, showTracks]);
 
+  // CCTV 마커
+  useEffect(() => {
+    if (!mapReady) return;
+    const K = window.kakao.maps;
+    const map = mapInst.current;
+    const overlays: { setMap: (v: null) => void }[] = [];
+
+    if (!showCctv) return;
+
+    const camSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>`;
+
+    CCTV_SPOTS.forEach(spot => {
+      const pos = new K.LatLng(spot.lat, spot.lng);
+      const el = document.createElement('div');
+      el.className = 'cctv-marker';
+      el.style.cursor = 'pointer';
+      el.innerHTML = camSvg;
+
+      const overlay = new K.CustomOverlay({ position: pos, content: el, map, zIndex: 3 });
+
+      const html = `<div style="background:#fff;border-radius:12px;padding:12px 14px;min-width:170px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
+        <div style="font-size:13px;font-weight:700;color:#191F28;margin-bottom:8px">📹 ${spot.name}</div>
+        <a href="${spot.url}" target="_blank" rel="noopener" style="display:inline-block;font-size:12px;font-weight:600;color:#fff;background:#3182F6;padding:5px 12px;border-radius:8px;text-decoration:none;">영상 보기 →</a>
+        <div style="font-size:10px;color:#B0B8C1;margin-top:6px">외부 사이트로 이동합니다</div>
+      </div>`;
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const ov = overlayRef.current as { setContent: (h: string) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
+        ov.setContent(html); ov.setPosition(pos); ov.setMap(map);
+      });
+      overlays.push(overlay);
+    });
+
+    return () => overlays.forEach(o => o.setMap(null));
+  }, [mapReady, showCctv]);
+
   function goToMyLocation() {
     if (!location || !mapInst.current) return;
     const K = window.kakao.maps;
@@ -239,15 +286,16 @@ export default function MapView({ location, riverData }: Props) {
   return (
     <MapWrapper>
       <MapContainer ref={mapRef} />
-      <TrackToggle>
-        <input
-          type="checkbox"
-          checked={showTracks}
-          onChange={e => setShowTracks(e.target.checked)}
-          style={{ accentColor: '#7c3aed' }}
-        />
-        러닝 스팟
-      </TrackToggle>
+      <MapToggles>
+        <ToggleChip>
+          <input type="checkbox" checked={showTracks} onChange={e => setShowTracks(e.target.checked)} style={{ accentColor: '#7c3aed' }} />
+          러닝 스팟
+        </ToggleChip>
+        <ToggleChip>
+          <input type="checkbox" checked={showCctv} onChange={e => setShowCctv(e.target.checked)} style={{ accentColor: '#e11d48' }} />
+          CCTV
+        </ToggleChip>
+      </MapToggles>
       {location && mapReady && (
         <LocBtn onClick={goToMyLocation} title="현재 위치로">📍</LocBtn>
       )}

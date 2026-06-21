@@ -39,8 +39,17 @@ const globals = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    line-height: 1;
+  }
+  .cctv-marker {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: #e11d48;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 `;
 
