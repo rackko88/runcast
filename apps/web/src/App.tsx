@@ -38,10 +38,12 @@ const Sidebar = styled.div`
   }
 `;
 const AppHeader = styled.header`
-  height: ${theme.sizes.headerH}; display: flex; align-items: center;
-  justify-content: space-between; padding: 0 20px;
+  height: calc(${theme.sizes.headerH} + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  display: flex; align-items: center;
+  justify-content: space-between; padding-left: 20px; padding-right: 20px;
   border-bottom: 1px solid ${theme.colors.gray200};
-  @media (min-width: ${theme.bp.pc}) { height: 64px; }
+  @media (min-width: ${theme.bp.pc}) { height: 64px; padding-top: 0; }
 `;
 const AppTitle = styled.h1`
   font-size: 17px; font-weight: 700; color: ${theme.colors.black}; letter-spacing: -0.3px;
