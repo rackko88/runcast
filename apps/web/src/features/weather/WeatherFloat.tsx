@@ -86,8 +86,7 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
 }
 
 export default function WeatherFloat({ weather, loading, location, onRefresh }: Props) {
-  const isMobile = window.innerWidth < 768;
-  const [collapsed, setCollapsed] = useState(isMobile);
+  const [collapsed, setCollapsed] = useState(false);
   const [areaName, setAreaName] = useState('');
 
   useEffect(() => {
