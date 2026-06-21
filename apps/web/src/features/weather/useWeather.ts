@@ -8,5 +8,5 @@ export function useWeather(location: GeoLocation | null) {
     ([, lat, lng]: [string, number, number]) => fetchWeather(lat, lng),
     { refreshInterval: 5 * 60 * 1000, revalidateOnFocus: false },
   );
-  return { weather: data ?? null, loading: isLoading };
+  return { weather: data ?? null, loading: location === null || isLoading };
 }
