@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type React from 'react';
 import styled from '@emotion/styled';
 import { RIVER_PATHS, RIVER_COLORS } from '../river/rivers';
 import { RUNNING_SPOTS, TRACK_TYPE_CONFIG } from '../track/tracks';
@@ -66,9 +67,10 @@ const LocBtn = styled.button`
 interface Props {
   location: { lat: number; lng: number } | null;
   riverData: RiverStation[];
+  moveToRef?: React.MutableRefObject<((lat: number, lng: number) => void) | null>;
 }
 
-export default function MapView({ location, riverData }: Props) {
+export default function MapView({ location, riverData, moveToRef }: Props) {
   const mapRef     = useRef<HTMLDivElement>(null);
   const mapInst    = useRef<unknown>(null);
   const overlayRef = useRef<unknown>(null);
@@ -277,15 +279,16 @@ export default function MapView({ location, riverData }: Props) {
         const btnRow = document.createElement('div');
         Object.assign(btnRow.style, { display:'flex', gap:'6px', marginTop:'10px' });
 
-        const makeBtn = (label: string, url: string, bg: string, color: string) => {
-          const b = document.createElement('button');
-          Object.assign(b.style, { flex:'1', textAlign:'center', padding:'7px 0', borderRadius:'8px', fontSize:'11px', fontWeight:'700', border:'none', background:bg, color, cursor:'pointer' });
-          b.textContent = label;
-          b.addEventListener('click', (ev) => { ev.stopPropagation(); window.open(url, '_blank'); });
-          return b;
+        const makeLink = (label: string, url: string, bg: string, color: string) => {
+          const a = document.createElement('a');
+          a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+          Object.assign(a.style, { flex:'1', textAlign:'center', padding:'7px 0', borderRadius:'8px', fontSize:'11px', fontWeight:'700', textDecoration:'none', background:bg, color, cursor:'pointer', display:'block' });
+          a.textContent = label;
+          K.event.preventMap(a);
+          return a;
         };
-        btnRow.appendChild(makeBtn('카카오맵', kakaoUrl, '#FAE100', '#3A1D1D'));
-        btnRow.appendChild(makeBtn('네이버지도', naverUrl, '#03C75A', '#fff'));
+        btnRow.appendChild(makeLink('카카오맵', kakaoUrl, '#FAE100', '#3A1D1D'));
+        btnRow.appendChild(makeLink('네이버지도', naverUrl, '#03C75A', '#fff'));
 
         wrap.appendChild(title);
         wrap.appendChild(badge);
@@ -332,17 +335,18 @@ export default function MapView({ location, riverData }: Props) {
         Object.assign(nameEl.style, { fontSize:'13px', fontWeight:'700', color:'#191F28', marginBottom:'10px' });
         nameEl.textContent = `📹 ${spot.name}`;
 
-        const btn = document.createElement('button');
-        Object.assign(btn.style, { fontSize:'12px', fontWeight:'600', color:'#fff', background:'#3182F6', padding:'6px 14px', borderRadius:'8px', border:'none', cursor:'pointer' });
-        btn.textContent = '영상 보기 →';
-        btn.addEventListener('click', (ev) => { ev.stopPropagation(); window.open(spot.url, '_blank'); });
+        const link = document.createElement('a');
+        link.href = spot.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        Object.assign(link.style, { display:'inline-block', fontSize:'12px', fontWeight:'600', color:'#fff', background:'#3182F6', padding:'6px 14px', borderRadius:'8px', textDecoration:'none' });
+        link.textContent = '영상 보기 →';
+        K.event.preventMap(link);
 
         const hint = document.createElement('div');
         Object.assign(hint.style, { fontSize:'10px', color:'#B0B8C1', marginTop:'6px' });
         hint.textContent = '외부 사이트로 이동합니다';
 
         wrap.appendChild(nameEl);
-        wrap.appendChild(btn);
+        wrap.appendChild(link);
         wrap.appendChild(hint);
 
         K.event.preventMap(wrap);
@@ -359,6 +363,18 @@ export default function MapView({ location, riverData }: Props) {
     const K = window.kakao.maps;
     (mapInst.current as { setCenter: (v: unknown) => void }).setCenter(new K.LatLng(location.lat, location.lng));
   }
+
+  // 외부에서 지도 이동 요청 (하천현황 클릭 등)
+  useEffect(() => {
+    if (!moveToRef) return;
+    moveToRef.current = (lat, lng) => {
+      if (!mapInst.current) return;
+      const K = window.kakao.maps;
+      (mapInst.current as { setCenter: (v: unknown) => void; setLevel: (v: number) => void })
+        .setCenter(new K.LatLng(lat, lng));
+      (mapInst.current as { setLevel: (v: number) => void }).setLevel(4);
+    };
+  }, [mapReady, moveToRef]);
 
   return (
     <MapWrapper>

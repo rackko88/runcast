@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { theme } from '@runcast/ui';
 import type { WeatherData } from '@/types';
@@ -55,10 +55,40 @@ const ToggleBtn = styled.button`
   line-height: 1; flex-shrink: 0; margin-top: 2px;
 `;
 
-interface Props { weather: WeatherData | null; loading: boolean; }
+const LocLabel = styled.div`font-size: 10px; color: ${theme.colors.gray400}; font-weight: 500; margin-bottom: 6px;`;
 
-export default function WeatherFloat({ weather, loading }: Props) {
+interface Props {
+  weather: WeatherData | null;
+  loading: boolean;
+  location?: { lat: number; lng: number } | null;
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  try {
+    const key = import.meta.env.VITE_KAKAO_MAP_KEY as string | undefined;
+    if (!key) return '';
+    const res = await fetch(
+      `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${lng}&y=${lat}`,
+      { headers: { Authorization: `KakaoAK ${key}` } }
+    );
+    if (!res.ok) return '';
+    const data = await res.json();
+    const region = data.documents?.[0];
+    if (!region) return '';
+    const gu  = region.region_2depth_name as string;
+    const si  = region.region_1depth_name as string;
+    return gu || si || '';
+  } catch { return ''; }
+}
+
+export default function WeatherFloat({ weather, loading, location }: Props) {
   const [collapsed, setCollapsed] = useState(false);
+  const [areaName, setAreaName] = useState('');
+
+  useEffect(() => {
+    if (!location) return;
+    reverseGeocode(location.lat, location.lng).then(setAreaName);
+  }, [location?.lat, location?.lng]);
 
   if (loading || !weather) return null;
 
@@ -81,6 +111,7 @@ export default function WeatherFloat({ weather, loading }: Props) {
   return (
     <Card $alert={isAlert}>
       <Full>
+        {areaName && <LocLabel>📍 {areaName}</LocLabel>}
         <FullHeader>
           <FullLeft>
             <BigIcon>{weather.icon}</BigIcon>

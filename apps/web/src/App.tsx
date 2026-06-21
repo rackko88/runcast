@@ -144,6 +144,7 @@ function AppLayout() {
   const sidebarTab = activeTab === 'map' ? 'river' : activeTab;
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const moveToRef = useRef<((lat: number, lng: number) => void) | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -166,7 +167,7 @@ function AppLayout() {
 
   function sidebarContent(tab: string) {
     switch (tab) {
-      case 'river':   return <RiverDetail riverData={riverData} loading={rLoading} isMock={isMock} lastUpdated={lastUpdated} onRefresh={refresh} />;
+      case 'river':   return <RiverDetail riverData={riverData} loading={rLoading} isMock={isMock} lastUpdated={lastUpdated} onRefresh={refresh} onStationClick={(lat, lng) => { moveToRef.current?.(lat, lng); navigate('/'); }} />;
       case 'notice':  return <NoticeBoard notices={notices} loading={nLoading} lastUpdated={nUpdated} onRefresh={nRefresh} />;
       case 'weather': return <WeatherDetail weather={weather} loading={wLoading} locationLabel={locationLabel} />;
 
@@ -174,7 +175,7 @@ function AppLayout() {
     }
   }
 
-  const ctx = { weather, wLoading, locationLabel, riverData, rLoading, isMock, lastUpdated, refresh, notices, nLoading, nUpdated, nRefresh };
+  const ctx = { weather, wLoading, locationLabel, riverData, rLoading, isMock, lastUpdated, refresh, notices, nLoading, nUpdated, nRefresh, moveToRef };
 
   return (
     <AppRoot>
@@ -212,8 +213,8 @@ function AppLayout() {
 
       <AppBody>
         <ViewMap $mobileHidden={activeTab !== 'map'}>
-          <MapView location={location} riverData={riverData} />
-          <WeatherFloat weather={weather} loading={wLoading} />
+          <MapView location={location} riverData={riverData} moveToRef={moveToRef} />
+          <WeatherFloat weather={weather} loading={wLoading} location={location} />
           <Legend>
             {(['정상','주의','경계','위험','통제'] as const).map(status => (
               <LegendItem key={status}>

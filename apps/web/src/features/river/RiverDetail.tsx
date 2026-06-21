@@ -93,9 +93,10 @@ interface Props {
   isMock: boolean;
   lastUpdated: Date | null;
   onRefresh: () => void;
+  onStationClick?: (lat: number, lng: number) => void;
 }
 
-export default function RiverDetail({ riverData, loading, isMock, lastUpdated, onRefresh }: Props) {
+export default function RiverDetail({ riverData, loading, isMock, lastUpdated, onRefresh, onStationClick }: Props) {
   const [activeRegion, setActiveRegion] = useState('서울');
   const allowedRivers = REGION_RIVERS[activeRegion] ?? [];
   const filtered = riverData.filter(s => allowedRivers.includes(s.river));
@@ -132,7 +133,7 @@ export default function RiverDetail({ riverData, loading, isMock, lastUpdated, o
                 <CardStatus style={{ color }}>{status}</CardStatus>
                 <Stations>
                   {stations.map(s => (
-                    <StationRow key={s.id}>
+                    <StationRow key={s.id} onClick={() => onStationClick?.(s.lat, s.lng)} style={{ cursor: onStationClick ? 'pointer' : undefined }}>
                       <Dot $bg={RIVER_COLORS[s.status]} />
                       <StationName>{s.name.replace(/.*\(/, '').replace(')', '')}</StationName>
                       <Level>{s.waterLevel !== null ? `${s.waterLevel.toFixed(2)}m` : '-'}</Level>
@@ -150,7 +151,7 @@ export default function RiverDetail({ riverData, loading, isMock, lastUpdated, o
           <Group key={name}>
             <GroupTitle>{name}</GroupTitle>
             {stations.map(s => (
-              <Station key={s.id}>
+              <Station key={s.id} onClick={() => onStationClick?.(s.lat, s.lng)} style={{ cursor: onStationClick ? 'pointer' : undefined }}>
                 <StName>{s.name}</StName>
                 <BarWrap>
                   <Bar>
