@@ -43,15 +43,15 @@ function runScore(w: WeatherData): { score: number; reasons: string[] } {
   else if (h >  80 && h <= 90) { humScore = 3;  reasons.push('습도 매우 높음'); }
   else                          { humScore = 0;  reasons.push('습도 극단값'); }
 
-  // 바람 (12점): 5-20km/h 미풍은 체온냉각 도움
+  // 바람 (12점): 1.5-5.5m/s 미풍은 체온냉각 도움
   const ws = w.windSpeed;
   let windScore: number;
-  if      (ws >= 5  && ws <= 20) { windScore = 12; }
-  else if (ws <  5)              { windScore = 10; }
-  else if (ws <= 30)             { windScore = 8;  }
-  else if (ws <= 45)             { windScore = 4;  reasons.push('바람 강함'); }
-  else if (ws <= 60)             { windScore = 1;  reasons.push('바람 매우 강함'); }
-  else                           { windScore = 0;  reasons.push('바람 위험 수준'); }
+  if      (ws >= 1.5 && ws <= 5.5) { windScore = 12; }
+  else if (ws <  1.5)              { windScore = 10; }
+  else if (ws <= 8.5)              { windScore = 8;  }
+  else if (ws <= 12.5)             { windScore = 4;  reasons.push('바람 강함'); }
+  else if (ws <= 16.5)             { windScore = 1;  reasons.push('바람 매우 강함'); }
+  else                             { windScore = 0;  reasons.push('바람 위험 수준'); }
 
   // 대기질 (8점)
   const pm = w.pm10 ?? 0;
@@ -165,7 +165,7 @@ const HourRain = styled.span<{ $show: boolean; $now: boolean }>`
   opacity: ${p => p.$show ? 1 : 0};
 `;
 const HourRainLabel = styled.span<{ $now: boolean }>`
-  font-size: 9px; color: ${p => p.$now ? 'rgba(255,255,255,0.4)' : theme.colors.gray300};
+  font-size: 9px; color: ${p => p.$now ? 'rgba(255,255,255,0.4)' : theme.colors.gray400};
   opacity: inherit;
 `;
 
@@ -179,7 +179,7 @@ const WeekRow = styled.div`
 const WeekDay = styled.span`font-size: 13px; font-weight: 700; color: ${theme.colors.black}; width: 34px; flex-shrink: 0;`;
 const WeekIconWrap = styled.div`display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0;`;
 const WeekEmoji = styled.span`font-size: 18px; flex-shrink: 0;`;
-const WeekDesc = styled.span`font-size: 11px; color: ${theme.colors.gray500}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
+const WeekDesc = styled.span`font-size: 11px; color: ${theme.colors.gray600}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
 const WeekRight = styled.div`display: flex; align-items: center; gap: 8px; flex-shrink: 0;`;
 const WeekTemps = styled.div`display: flex; align-items: center; gap: 4px;`;
 const WeekMax = styled.span`font-size: 13px; font-weight: 700; color: #ef4444;`;
@@ -244,7 +244,7 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
           <DataCell label="습도" value={`${weather.humidity}%`} />
           <DataCell
             label="바람"
-            value={`${weather.windSpeed}km/h${weather.windDirection != null ? ` ${windDirLabel(weather.windDirection)}` : ''}`}
+            value={`${weather.windSpeed}m/s${weather.windDirection != null ? ` ${windDirLabel(weather.windDirection)}` : ''}`}
           />
           {(weather.precipProbability ?? 0) > 0 && (
             <DataCell label="강수확률" value={`${weather.precipProbability}%`} />

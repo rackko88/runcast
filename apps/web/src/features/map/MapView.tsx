@@ -32,9 +32,17 @@ function getRiverStatus(riverName: string, riverData: RiverStation[]): RiverStat
   return '정상';
 }
 
-const MapContainer = styled.div`
-  width: 100%;
-  height: 100%;
+const MapWrapper = styled.div`position: relative; width: 100%; height: 100%;`;
+const MapContainer = styled.div`width: 100%; height: 100%;`;
+const LocBtn = styled.button`
+  position: absolute; bottom: 16px; right: 16px; z-index: 100;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #fff; border: none;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.18);
+  cursor: pointer; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.12s;
+  &:active { transform: scale(0.92); }
 `;
 
 interface Props {
@@ -156,5 +164,18 @@ export default function MapView({ location, riverData }: Props) {
     };
   }, [mapReady, riverData]);
 
-  return <MapContainer ref={mapRef} />;
+  function goToMyLocation() {
+    if (!location || !mapInst.current) return;
+    const K = window.kakao.maps;
+    (mapInst.current as { setCenter: (v: unknown) => void }).setCenter(new K.LatLng(location.lat, location.lng));
+  }
+
+  return (
+    <MapWrapper>
+      <MapContainer ref={mapRef} />
+      {location && mapReady && (
+        <LocBtn onClick={goToMyLocation} title="현재 위치로">📍</LocBtn>
+      )}
+    </MapWrapper>
+  );
 }

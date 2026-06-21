@@ -3,10 +3,10 @@ import { theme } from '@runcast/ui';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const TABS = [
-  { id: 'map',    icon: '🗺️', label: '지도'  },
-  { id: 'notice', icon: '📋', label: '공지'  },
-  { id: 'weather',icon: '🌤️', label: '날씨'  },
-  { id: 'river',  icon: '💧', label: '하천'  },
+  { id: 'map',    icon: '📍', label: '지도'  },
+  { id: 'notice', icon: '🔔', label: '공지'  },
+  { id: 'weather',icon: '🌈', label: '날씨'  },
+  { id: 'river',  icon: '🌊', label: '하천'  },
 ];
 
 const Nav = styled.nav`
