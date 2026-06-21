@@ -35,6 +35,14 @@ function getRiverStatus(riverName: string, riverData: RiverStation[]): RiverStat
 
 const MapWrapper = styled.div`position: relative; width: 100%; height: 100%;`;
 const MapContainer = styled.div`width: 100%; height: 100%;`;
+const TrackToggle = styled.label`
+  position: absolute; bottom: 70px; right: 12px; z-index: 100;
+  background: #fff; border-radius: 20px; padding: 6px 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: #333;
+  cursor: pointer; user-select: none;
+`;
 const LocBtn = styled.button`
   position: absolute; bottom: 16px; right: 16px; z-index: 100;
   width: 44px; height: 44px; border-radius: 50%;
@@ -55,7 +63,8 @@ export default function MapView({ location, riverData }: Props) {
   const mapRef     = useRef<HTMLDivElement>(null);
   const mapInst    = useRef<unknown>(null);
   const overlayRef = useRef<unknown>(null);
-  const [mapReady, setMapReady] = useState(false);
+  const [mapReady, setMapReady]   = useState(false);
+  const [showTracks, setShowTracks] = useState(false);
 
   useEffect(() => {
     if (mapInst.current || !mapRef.current) return;
@@ -179,6 +188,8 @@ export default function MapView({ location, riverData }: Props) {
       '산악코스': `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 4-8 4 4 4-4 4 8"/><path d="M2 17h20"/></svg>`,
     };
 
+    if (!showTracks) return;
+
     RUNNING_SPOTS.forEach(spot => {
       const cfg = TRACK_TYPE_CONFIG[spot.type];
       const pos = new K.LatLng(spot.lat, spot.lng);
@@ -217,7 +228,7 @@ export default function MapView({ location, riverData }: Props) {
     });
 
     return () => overlays.forEach(o => o.setMap(null));
-  }, [mapReady]);
+  }, [mapReady, showTracks]);
 
   function goToMyLocation() {
     if (!location || !mapInst.current) return;
@@ -228,6 +239,15 @@ export default function MapView({ location, riverData }: Props) {
   return (
     <MapWrapper>
       <MapContainer ref={mapRef} />
+      <TrackToggle>
+        <input
+          type="checkbox"
+          checked={showTracks}
+          onChange={e => setShowTracks(e.target.checked)}
+          style={{ accentColor: '#7c3aed' }}
+        />
+        러닝 스팟
+      </TrackToggle>
       {location && mapReady && (
         <LocBtn onClick={goToMyLocation} title="현재 위치로">📍</LocBtn>
       )}

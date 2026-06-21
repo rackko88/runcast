@@ -48,7 +48,7 @@ export default function TrackList() {
             $color={cfg.color}
             onClick={() => setFilter(filter === type ? null : type)}
           >
-            {cfg.emoji} {cfg.label}
+            {cfg.label[0]} {cfg.label}
           </FilterBtn>
         ))}
       </FilterRow>
@@ -59,7 +59,7 @@ export default function TrackList() {
           <Card key={spot.id}>
             <CardTop>
               <Name>{spot.name}</Name>
-              <TypeBadge $color={cfg.color}>{cfg.emoji} {cfg.label}</TypeBadge>
+              <TypeBadge $color={cfg.color}>{cfg.label[0]} {cfg.label}</TypeBadge>
             </CardTop>
             {spot.distanceKm && (
               <Dist>
