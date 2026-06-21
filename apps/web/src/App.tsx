@@ -7,13 +7,11 @@ import MapPage from '@/pages/MapPage';
 import NoticePage from '@/pages/NoticePage';
 import WeatherPage from '@/pages/WeatherPage';
 import RiverPage from '@/pages/RiverPage';
-import TrackPage from '@/pages/TrackPage';
 import MapView from '@/features/map/MapView';
 import WeatherFloat from '@/features/weather/WeatherFloat';
 import WeatherDetail from '@/features/weather/WeatherDetail';
 import RiverDetail from '@/features/river/RiverDetail';
 import NoticeBoard from '@/features/notice/NoticeBoard';
-import TrackList from '@/features/track/TrackList';
 import BottomTabBar from '@/shared/components/BottomTabBar';
 import { useLocationStore } from '@/stores/locationStore';
 import { useWeather } from '@/features/weather/useWeather';
@@ -133,7 +131,6 @@ const LocError = styled.div`
 const PC_TABS = [
   { id: 'river',   label: '하천현황' },
   { id: 'weather', label: '날씨상세' },
-  { id: 'track',   label: '러닝 스팟' },
   { id: 'notice',  label: '공지사항' },
 ];
 
@@ -167,7 +164,7 @@ function AppLayout() {
       case 'river':   return <RiverDetail riverData={riverData} loading={rLoading} isMock={isMock} lastUpdated={lastUpdated} onRefresh={refresh} />;
       case 'notice':  return <NoticeBoard notices={notices} loading={nLoading} lastUpdated={nUpdated} onRefresh={nRefresh} />;
       case 'weather': return <WeatherDetail weather={weather} loading={wLoading} locationLabel={locationLabel} />;
-      case 'track':   return <TrackList />;
+
       default:        return null;
     }
   }
@@ -242,7 +239,6 @@ export default function App() {
           <Route path="notice"  element={<NoticePage />} />
           <Route path="weather" element={<WeatherPage />} />
           <Route path="river"   element={<RiverPage />} />
-          <Route path="track"   element={<TrackPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

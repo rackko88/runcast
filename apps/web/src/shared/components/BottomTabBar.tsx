@@ -1,14 +1,13 @@
 import styled from '@emotion/styled';
 import { theme } from '@runcast/ui';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Map, Bell, Cloud, Waves, Footprints } from 'lucide-react';
+import { Map, Bell, Cloud, Waves } from 'lucide-react';
 
 const TABS = [
-  { id: 'map',     Icon: Map,        label: '지도' },
-  { id: 'weather', Icon: Cloud,      label: '날씨' },
-  { id: 'river',   Icon: Waves,      label: '하천' },
-  { id: 'track',   Icon: Footprints, label: '스팟' },
-  { id: 'notice',  Icon: Bell,       label: '공지' },
+  { id: 'map',     Icon: Map,   label: '지도' },
+  { id: 'weather', Icon: Cloud, label: '날씨' },
+  { id: 'river',   Icon: Waves, label: '하천' },
+  { id: 'notice',  Icon: Bell,  label: '공지' },
 ];
 
 const Nav = styled.nav`
