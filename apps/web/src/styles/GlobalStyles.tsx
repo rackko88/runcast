@@ -7,13 +7,13 @@ const globals = css`
     margin: 0;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   html, body, #root {
     height: 100%;
-    overflow: hidden;
-    overscroll-behavior: none;
   }
   body {
+    overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     font-family: -apple-system, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
   }
