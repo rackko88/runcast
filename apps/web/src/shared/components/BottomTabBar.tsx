@@ -11,10 +11,12 @@ const TABS = [
 ];
 
 const Nav = styled.nav`
-  flex-shrink: 0;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
   display: flex; background: ${theme.colors.white};
   border-top: 1px solid ${theme.colors.gray200};
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 100;
   @media (min-width: ${theme.bp.pc}) { display: none; }
 `;
 const BtnInner = styled.div`

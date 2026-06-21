@@ -106,6 +106,9 @@ const PcTabContent = styled.div`
 `;
 const AppBody = styled.main`
   flex: 1; position: relative; overflow: hidden; min-height: 0;
+  @media (max-width: ${theme.bp.pc}) {
+    padding-bottom: calc(${theme.sizes.tabsH} + env(safe-area-inset-bottom, 0px));
+  }
 `;
 const ViewMap = styled.div<{ $mobileHidden: boolean }>`
   position: absolute; inset: 0;
