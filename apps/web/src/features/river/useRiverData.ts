@@ -20,7 +20,7 @@ export function useRiverData() {
     revalidateOnFocus: false,
   });
 
-  const isMock = data?.levels[0]?.isMock ?? false;
+  const isMock = data?.levels?.[0]?.isMock ?? false;
 
   const riverData = useMemo<RiverStation[]>(() => {
     if (!data) return [];
