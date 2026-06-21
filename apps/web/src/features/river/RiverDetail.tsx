@@ -51,6 +51,12 @@ const BarWrap = styled.div`flex: 1; display: flex; align-items: center; gap: 8px
 const Bar = styled.div`flex: 1; height: 5px; background: ${theme.colors.gray100}; border-radius: 3px; position: relative; overflow: visible;`;
 const Fill = styled.div<{ $w: number; $bg: string }>`height: 100%; border-radius: 3px; transition: width 0.6s ease; width: ${p => p.$w}%; background: ${p => p.$bg};`;
 const WarnMark = styled.span<{ $left: number }>`position: absolute; top: -4px; left: ${p => p.$left}%; width: 2px; height: 13px; background: ${theme.colors.orange}; border-radius: 1px; transform: translateX(-50%);`;
+const WarnLabel = styled.span<{ $left: number }>`
+  position: absolute; top: -18px; left: ${p => p.$left}%;
+  transform: translateX(-50%);
+  font-size: 9px; color: ${theme.colors.orange}; font-weight: 700;
+  white-space: nowrap; pointer-events: none;
+`;
 const BarLevel = styled.span`font-size: 12px; font-weight: 700; width: 42px; text-align: right;`;
 
 function worstStatus(stations: RiverStation[]): RiverStatus {
@@ -128,6 +134,7 @@ export default function RiverDetail({ riverData, loading, isMock, lastUpdated, o
                       $w={Math.min(100, s.waterLevel != null ? (s.waterLevel / s.dangerLevel) * 100 : 0)}
                       $bg={RIVER_COLORS[s.status]}
                     />
+                    <WarnLabel $left={(s.warnLevel / s.dangerLevel) * 100}>주의</WarnLabel>
                     <WarnMark $left={(s.warnLevel / s.dangerLevel) * 100} />
                   </Bar>
                   <BarLevel style={{ color: RIVER_COLORS[s.status] }}>
