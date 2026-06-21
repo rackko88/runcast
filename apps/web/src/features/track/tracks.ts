@@ -67,6 +67,43 @@ export const RUNNING_SPOTS: RunningSpot[] = [
     accessible: true,
   },
 
+  {
+    id: 'jungnang-track',
+    name: '중랑천 체육공원 트랙',
+    type: '육상트랙',
+    lat: 37.5790, lng: 127.0760,
+    distanceKm: 0.4, surface: 'tartan',
+    note: '중랑천변, 무료 개방',
+    accessible: true,
+  },
+  {
+    id: 'banpo-stadium',
+    name: '반포종합운동장 트랙',
+    type: '육상트랙',
+    lat: 37.5038, lng: 126.9993,
+    distanceKm: 0.4, surface: 'tartan',
+    note: '반포한강공원 인근',
+    accessible: true,
+  },
+  {
+    id: 'yangcheon',
+    name: '양천구 목동 운동장 보조트랙',
+    type: '육상트랙',
+    lat: 37.5306, lng: 126.8698,
+    distanceKm: 0.4, surface: 'tartan',
+    note: '안양천변, 목동 인근',
+    accessible: true,
+  },
+  {
+    id: 'seongdong',
+    name: '성동구 체육관 트랙',
+    type: '육상트랙',
+    lat: 37.5639, lng: 127.0378,
+    distanceKm: 0.4, surface: 'tartan',
+    note: '중랑천 서쪽, 행당동',
+    accessible: true,
+  },
+
   // ── 한강 러닝 코스 ──
   {
     id: 'hangang-yeouido',
