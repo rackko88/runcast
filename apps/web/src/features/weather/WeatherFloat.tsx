@@ -13,46 +13,45 @@ function pmGrade(pm10?: number, pm25?: number) {
 }
 
 const Card = styled.div<{ $alert: boolean }>`
-  position: absolute;
-  top: 12px; right: 12px;
+  position: absolute; top: 12px; right: 12px;
   background: ${theme.colors.white};
   border-radius: ${theme.radius.md};
   box-shadow: ${theme.shadows.md};
   z-index: 50;
-  overflow: hidden;
   ${p => p.$alert && `outline: 2px solid ${theme.colors.blue};`}
 `;
-const CollapseRow = styled.div`
+
+/* 접힌 상태 */
+const Mini = styled.div`
   display: flex; align-items: center; gap: 8px;
   padding: 8px 10px 8px 14px; cursor: pointer;
-  min-width: 140px;
 `;
-const MiniIcon = styled.span`font-size: 20px; line-height: 1; flex-shrink: 0;`;
-const MiniTemp = styled.span`font-size: 17px; font-weight: 700; color: ${theme.colors.black}; flex: 1;`;
+const MiniIcon = styled.span`font-size: 20px; line-height: 1;`;
+const MiniTemp = styled.span`font-size: 17px; font-weight: 700; color: ${theme.colors.black};`;
 const MiniDesc = styled.span`font-size: 11px; color: ${theme.colors.gray600};`;
-const ToggleBtn = styled.button`
-  background: none; border: none; cursor: pointer;
-  color: ${theme.colors.gray400}; font-size: 14px; padding: 0 4px;
-  line-height: 1; flex-shrink: 0;
-`;
-const Details = styled.div`
-  padding: 0 14px 12px;
-  display: flex; flex-direction: column; gap: 6px;
-  border-top: 1px solid ${theme.colors.gray100};
-`;
-const Top = styled.div`display: flex; align-items: center; gap: 10px; padding-top: 10px;`;
-const Icon = styled.span`font-size: 26px; line-height: 1; flex-shrink: 0;`;
-const Info = styled.div`display: flex; flex-direction: column; gap: 1px; flex: 1;`;
+
+/* 펼친 상태 */
+const Full = styled.div`padding: 12px 14px; min-width: 200px;`;
+const FullHeader = styled.div`display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px;`;
+const FullLeft = styled.div`display: flex; align-items: center; gap: 10px;`;
+const BigIcon = styled.span`font-size: 26px; line-height: 1; flex-shrink: 0;`;
+const Info = styled.div`display: flex; flex-direction: column; gap: 1px;`;
 const TempRow = styled.div`display: flex; align-items: baseline; gap: 6px;`;
 const Temp = styled.span`font-size: 20px; font-weight: 700; color: ${theme.colors.black}; line-height: 1;`;
 const Range = styled.span`font-size: 11px; color: ${theme.colors.gray600};`;
 const Desc = styled.span`font-size: 11px; color: ${theme.colors.gray600};`;
-const Hum = styled.span`font-size: 12px; color: ${theme.colors.blue}; font-weight: 600; flex-shrink: 0;`;
-const Sun = styled.div`display: flex; gap: 12px; font-size: 12px; color: ${theme.colors.gray600}; font-weight: 500; padding-top: 4px; border-top: 1px solid ${theme.colors.gray100};`;
-const Air = styled.div`display: flex; align-items: center; gap: 8px; font-size: 11px;`;
+const Hum = styled.span`font-size: 12px; color: ${theme.colors.blue}; font-weight: 600;`;
+const Sun = styled.div`display: flex; gap: 12px; font-size: 12px; color: ${theme.colors.gray600}; font-weight: 500; padding-top: 8px; border-top: 1px solid ${theme.colors.gray100};`;
+const Air = styled.div`display: flex; align-items: center; gap: 8px; font-size: 11px; padding-top: 6px;`;
 const AirGrade = styled.span`font-weight: 700;`;
 const AirVals = styled.span`color: ${theme.colors.gray400};`;
-const Rain = styled.div`font-size: 11px; color: ${theme.colors.blue}; font-weight: 600;`;
+const Rain = styled.div`font-size: 11px; color: ${theme.colors.blue}; font-weight: 600; padding-top: 4px;`;
+
+const ToggleBtn = styled.button`
+  background: none; border: none; cursor: pointer;
+  color: ${theme.colors.gray400}; font-size: 13px; padding: 0;
+  line-height: 1; flex-shrink: 0; margin-top: 2px;
+`;
 
 interface Props { weather: WeatherData | null; loading: boolean; }
 
@@ -64,21 +63,25 @@ export default function WeatherFloat({ weather, loading }: Props) {
   const isAlert = weather.isRaining || (weather.precipProbability ?? 0) >= 60;
   const grade = pmGrade(weather.pm10, weather.pm25);
 
+  if (collapsed) {
+    return (
+      <Card $alert={isAlert}>
+        <Mini onClick={() => setCollapsed(false)}>
+          <MiniIcon>{weather.icon}</MiniIcon>
+          <MiniTemp>{weather.temperature}°</MiniTemp>
+          <MiniDesc>{weather.description}</MiniDesc>
+          <ToggleBtn>▼</ToggleBtn>
+        </Mini>
+      </Card>
+    );
+  }
+
   return (
     <Card $alert={isAlert}>
-      <CollapseRow onClick={() => setCollapsed(v => !v)}>
-        <MiniIcon>{weather.icon}</MiniIcon>
-        <MiniTemp>{weather.temperature}°</MiniTemp>
-        {collapsed && <MiniDesc>{weather.description}</MiniDesc>}
-        <ToggleBtn onClick={e => { e.stopPropagation(); setCollapsed(v => !v); }}>
-          {collapsed ? '▼' : '▲'}
-        </ToggleBtn>
-      </CollapseRow>
-
-      {!collapsed && (
-        <Details>
-          <Top>
-            <Icon>{weather.icon}</Icon>
+      <Full>
+        <FullHeader>
+          <FullLeft>
+            <BigIcon>{weather.icon}</BigIcon>
             <Info>
               <TempRow>
                 <Temp>{weather.temperature}°</Temp>
@@ -86,29 +89,32 @@ export default function WeatherFloat({ weather, loading }: Props) {
               </TempRow>
               <Desc>{weather.description}</Desc>
             </Info>
+          </FullLeft>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <ToggleBtn onClick={() => setCollapsed(true)}>▲</ToggleBtn>
             <Hum>💧{weather.humidity}%</Hum>
-          </Top>
+          </div>
+        </FullHeader>
 
-          {weather.sunrise && (
-            <Sun>
-              <span>🌅 {weather.sunrise}</span>
-              <span>🌇 {weather.sunset}</span>
-            </Sun>
-          )}
+        {weather.sunrise && (
+          <Sun>
+            <span>🌅 {weather.sunrise}</span>
+            <span>🌇 {weather.sunset}</span>
+          </Sun>
+        )}
 
-          {grade && (
-            <Air>
-              <AirGrade style={{ color: grade.color }}>● {grade.text}</AirGrade>
-              <AirVals>PM10 {weather.pm10} · PM2.5 {weather.pm25}㎍</AirVals>
-            </Air>
-          )}
+        {grade && (
+          <Air>
+            <AirGrade style={{ color: grade.color }}>● {grade.text}</AirGrade>
+            <AirVals>PM10 {weather.pm10} · PM2.5 {weather.pm25}㎍</AirVals>
+          </Air>
+        )}
 
-          {weather.precipitation > 0 && <Rain>💧 {weather.precipitation}mm</Rain>}
-          {(weather.precipProbability ?? 0) > 0 && !weather.isRaining && (
-            <Rain>강수 {weather.precipProbability}%</Rain>
-          )}
-        </Details>
-      )}
+        {weather.precipitation > 0 && <Rain>💧 {weather.precipitation}mm</Rain>}
+        {(weather.precipProbability ?? 0) > 0 && !weather.isRaining && (
+          <Rain>강수 {weather.precipProbability}%</Rain>
+        )}
+      </Full>
     </Card>
   );
 }
