@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { BrowserRouter, Routes, Route, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -41,13 +42,37 @@ const AppHeader = styled.header`
   border-bottom: 1px solid ${theme.colors.gray200};
   @media (min-width: ${theme.bp.pc}) { height: 64px; }
 `;
-const AppTitle = styled.h1`font-size: 17px; font-weight: 700; color: ${theme.colors.black}; letter-spacing: -0.3px;`;
-const HeaderRight = styled.div`display: flex; align-items: center; gap: 8px;`;
-const HeaderWeather = styled.span`font-size: 15px; color: ${theme.colors.gray600}; font-weight: 500;`;
+const AppTitle = styled.h1`
+  font-size: 17px; font-weight: 700; color: ${theme.colors.black}; letter-spacing: -0.3px;
+  cursor: pointer; user-select: none;
+  &:active { opacity: 0.7; }
+`;
+const HeaderRight = styled.div`display: flex; align-items: center; gap: 8px; position: relative;`;
 const AlertBadge = styled.span`
   background: ${theme.colors.red}; color: #fff;
   font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
   animation: ${pulse} 2s infinite;
+`;
+const MenuBtn = styled.button`
+  width: 36px; height: 36px; border-radius: 10px;
+  background: ${theme.colors.gray100}; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  flex-shrink: 0;
+  &:active { background: ${theme.colors.gray200}; }
+`;
+const MenuLine = styled.span`width: 16px; height: 2px; background: ${theme.colors.gray800}; border-radius: 2px;`;
+const MenuDropdown = styled.div`
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: ${theme.colors.white}; border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12); z-index: 200;
+  min-width: 150px; overflow: hidden;
+`;
+const MenuItem = styled.button`
+  width: 100%; padding: 12px 16px; background: none; border: none;
+  text-align: left; font-size: 14px; color: ${theme.colors.gray800};
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  &:hover { background: ${theme.colors.gray50}; }
+  &:not(:last-child) { border-bottom: 1px solid ${theme.colors.gray100}; }
 `;
 const PcTabNav = styled.nav`
   display: none;
@@ -115,6 +140,16 @@ function AppLayout() {
   const activeTab = pathname === '/' ? 'map' : pathname.slice(1);
   const sidebarTab = activeTab === 'map' ? 'river' : activeTab;
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    if (menuOpen) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [menuOpen]);
+
   const { location, error: locError } = useLocationStore();
   const locationLabel = !location ? '위치 확인 중' : locError ? '서울 시청 기준' : '내 위치 기준';
   const { weather, loading: wLoading } = useWeather(location);
@@ -139,10 +174,20 @@ function AppLayout() {
     <AppRoot>
       <Sidebar>
         <AppHeader>
-          <AppTitle>🏃 러닝 오케이?</AppTitle>
-          <HeaderRight>
-            {weather && !wLoading && <HeaderWeather>{weather.icon} {weather.temperature}°</HeaderWeather>}
+          <AppTitle onClick={() => navigate('/')}>🏃 러닝 오케이?</AppTitle>
+          <HeaderRight ref={menuRef}>
             {alertCount > 0 && <AlertBadge>⚠️ {alertCount}곳 위험</AlertBadge>}
+            <MenuBtn onClick={() => setMenuOpen(v => !v)}>
+              <MenuLine /><MenuLine /><MenuLine />
+            </MenuBtn>
+            {menuOpen && (
+              <MenuDropdown>
+                <MenuItem onClick={() => { navigate('/weather'); setMenuOpen(false); }}>🌤️ 날씨 상세</MenuItem>
+                <MenuItem onClick={() => { navigate('/river');   setMenuOpen(false); }}>🌊 하천 현황</MenuItem>
+                <MenuItem onClick={() => { navigate('/notice');  setMenuOpen(false); }}>🔔 공지 사항</MenuItem>
+                <MenuItem onClick={() => { refresh(); nRefresh(); setMenuOpen(false); }}>↻ 새로고침</MenuItem>
+              </MenuDropdown>
+            )}
           </HeaderRight>
         </AppHeader>
 

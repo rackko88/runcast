@@ -106,7 +106,7 @@ export default function WeatherFloat({ weather, loading }: Props) {
         {grade && (
           <Air>
             <AirGrade style={{ color: grade.color }}>● {grade.text}</AirGrade>
-            <AirVals>PM10 {weather.pm10} · PM2.5 {weather.pm25}㎍</AirVals>
+            <AirVals>미세먼지 {weather.pm10} · 초미세 {weather.pm25}</AirVals>
           </Air>
         )}
 

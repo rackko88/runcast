@@ -160,7 +160,8 @@ const Cell = styled.div`
   display: flex; flex-direction: column; gap: 2px; min-width: 0;
 `;
 const CellLabel = styled.span`font-size: 11px; color: ${theme.colors.gray400}; font-weight: 500; white-space: nowrap;`;
-const CellVal = styled.span`font-size: 14px; font-weight: 700; color: ${theme.colors.black}; white-space: nowrap;`;
+const CellVal = styled.span`font-size: 14px; font-weight: 700; color: ${theme.colors.black}; word-break: keep-all; overflow-wrap: break-word;`;
+const CellSub = styled.span`font-size: 11px; color: ${theme.colors.gray600}; font-weight: 500;`;
 
 // 시간별
 const HourlyScroll = styled.div`
@@ -219,8 +220,14 @@ const WeekPrecip = styled.span<{ $show: boolean }>`font-size: 10px; color: ${the
 const AirSummary = styled.div`font-size: 18px; font-weight: 700; margin-bottom: 10px;`;
 const Source = styled.div`font-size: 11px; color: ${theme.colors.gray400}; text-align: right; padding-top: 4px;`;
 
-function DataCell({ label, value }: { label: string; value: string }) {
-  return <Cell><CellLabel>{label}</CellLabel><CellVal>{value}</CellVal></Cell>;
+function DataCell({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <Cell>
+      <CellLabel>{label}</CellLabel>
+      <CellVal>{value}</CellVal>
+      {sub && <CellSub>{sub}</CellSub>}
+    </Cell>
+  );
 }
 
 interface Props {
@@ -268,10 +275,15 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
           </BigInfo>
         </Current>
         <Grid>
-          <DataCell label="습도" value={`${weather.humidity}% · ${humidityLabel(weather.humidity)}`} />
+          <DataCell
+            label="습도"
+            value={`${weather.humidity}%`}
+            sub={humidityLabel(weather.humidity)}
+          />
           <DataCell
             label="바람"
-            value={`${weather.windSpeed}m/s ${windStrength(weather.windSpeed)}${weather.windDirection != null ? ` · ${windDirLabel(weather.windDirection)}` : ''}`}
+            value={`${weather.windSpeed}m/s${weather.windDirection != null ? ` ${windDirLabel(weather.windDirection)}` : ''}`}
+            sub={windStrength(weather.windSpeed)}
           />
           {(weather.precipProbability ?? 0) > 0 && (
             <DataCell label="강수확률" value={`${weather.precipProbability}%`} />
