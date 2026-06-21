@@ -6,10 +6,12 @@ import type { WeatherData } from '@/types';
 function pmGrade(pm10?: number, pm25?: number) {
   if (pm10 == null) return null;
   const p25 = pm25 ?? 0;
-  if (pm10 <= 30  && p25 <= 15) return { text: '좋음',   color: '#22c55e' };
-  if (pm10 <= 80  && p25 <= 35) return { text: '보통',   color: '#f59e0b' };
-  if (pm10 <= 150 && p25 <= 75) return { text: '나쁨',   color: '#ef4444' };
-  return                               { text: '매우나쁨',color: '#7c3aed' };
+  if (pm10 <= 15  && p25 <= 8)   return { text: '매우좋음', color: '#3b82f6' };
+  if (pm10 <= 30  && p25 <= 15)  return { text: '좋음',     color: '#22c55e' };
+  if (pm10 <= 80  && p25 <= 35)  return { text: '보통',     color: '#f59e0b' };
+  if (pm10 <= 150 && p25 <= 75)  return { text: '나쁨',     color: '#ef4444' };
+  if (pm10 <= 250 && p25 <= 150) return { text: '매우나쁨', color: '#7c3aed' };
+  return                                { text: '최악',     color: '#1a1a1a' };
 }
 
 const Card = styled.div<{ $alert: boolean }>`

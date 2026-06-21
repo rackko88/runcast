@@ -73,13 +73,36 @@ function scoreInfo(score: number) {
   return                  { text: '비추천', color: '#ef4444', emoji: '⛔' };
 }
 
+const PM_GRADES = [
+  { text: '매우좋음', color: '#3b82f6' },
+  { text: '좋음',     color: '#22c55e' },
+  { text: '보통',     color: '#f59e0b' },
+  { text: '나쁨',     color: '#ef4444' },
+  { text: '매우나쁨', color: '#7c3aed' },
+  { text: '최악',     color: '#1a1a1a' },
+] as const;
+
+function pm10Grade(v: number) {
+  if (v <= 15)  return PM_GRADES[0];
+  if (v <= 30)  return PM_GRADES[1];
+  if (v <= 80)  return PM_GRADES[2];
+  if (v <= 150) return PM_GRADES[3];
+  if (v <= 250) return PM_GRADES[4];
+  return PM_GRADES[5];
+}
+function pm25Grade(v: number) {
+  if (v <= 8)   return PM_GRADES[0];
+  if (v <= 15)  return PM_GRADES[1];
+  if (v <= 35)  return PM_GRADES[2];
+  if (v <= 75)  return PM_GRADES[3];
+  if (v <= 150) return PM_GRADES[4];
+  return PM_GRADES[5];
+}
 function pmGrade(pm10?: number, pm25?: number) {
   if (pm10 == null) return null;
-  const p25 = pm25 ?? 0;
-  if (pm10 <= 30  && p25 <= 15) return { text: '좋음',    color: '#22c55e' };
-  if (pm10 <= 80  && p25 <= 35) return { text: '보통',    color: '#f59e0b' };
-  if (pm10 <= 150 && p25 <= 75) return { text: '나쁨',    color: '#ef4444' };
-  return                               { text: '매우나쁨', color: '#7c3aed' };
+  const g10 = pm10Grade(pm10);
+  const g25 = pm25 != null ? pm25Grade(pm25) : PM_GRADES[0];
+  return PM_GRADES[Math.max(PM_GRADES.indexOf(g10), PM_GRADES.indexOf(g25))];
 }
 
 function windDirLabel(deg?: number) {
@@ -381,8 +404,16 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
           <SectionTitle>대기질</SectionTitle>
           <AirSummary style={{ color: grade.color }}>● {grade.text}</AirSummary>
           <Grid>
-            <DataCell label="미세먼지 PM10" value={`${weather.pm10}㎍/m³`} />
-            <DataCell label="초미세 PM2.5" value={`${weather.pm25}㎍/m³`} />
+            <DataCell
+              label="미세먼지 PM10"
+              value={`${weather.pm10}㎍/m³`}
+              sub={weather.pm10 != null ? pm10Grade(weather.pm10).text : undefined}
+            />
+            <DataCell
+              label="초미세먼지 PM2.5"
+              value={`${weather.pm25}㎍/m³`}
+              sub={weather.pm25 != null ? pm25Grade(weather.pm25).text : undefined}
+            />
           </Grid>
         </Card>
       )}
