@@ -249,13 +249,51 @@ export default function MapView({ location, riverData }: Props) {
         </div>
       </div>`;
 
+      // DOM으로 팝업 구성 — iOS PWA에서 innerHTML anchor는 동작 안 함
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const ov = overlayRef.current as { setContent: (h: HTMLElement) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
-        const popEl = document.createElement('div');
-        popEl.innerHTML = html;
-        K.event.preventMap(popEl);
-        ov.setContent(popEl); ov.setPosition(pos); ov.setMap(map);
+
+        const wrap = document.createElement('div');
+        Object.assign(wrap.style, { background:'#fff', borderRadius:'14px', padding:'14px 16px', minWidth:'200px', boxShadow:'0 4px 20px rgba(0,0,0,0.12)', fontFamily:"-apple-system,'Noto Sans KR',sans-serif" });
+
+        const title = document.createElement('div');
+        Object.assign(title.style, { fontSize:'14px', fontWeight:'700', color:'#191F28', marginBottom:'6px' });
+        title.textContent = spot.name;
+
+        const badge = document.createElement('div');
+        Object.assign(badge.style, { display:'inline-block', fontSize:'10px', fontWeight:'700', padding:'2px 7px', borderRadius:'8px', background:`${cfg.color}22`, color:cfg.color, marginBottom:'10px' });
+        badge.textContent = cfg.label;
+
+        const info = document.createElement('div');
+        info.style.fontSize = '12px';
+        info.style.color = '#4E5968';
+        info.style.lineHeight = '1.8';
+        if (distText) { const d = document.createElement('div'); d.style.color='#3182F6'; d.style.fontWeight='600'; d.textContent=`📏 ${distText}`; info.appendChild(d); }
+        if (spot.hours) { const d = document.createElement('div'); d.textContent=`🕐 ${spot.hours}`; info.appendChild(d); }
+        if (spot.fee)   { const d = document.createElement('div'); d.textContent=`💰 ${spot.fee}`;   info.appendChild(d); }
+        if (spot.note)  { const d = document.createElement('div'); d.style.color='#8B95A1'; d.style.fontSize='11px'; d.textContent=spot.note; info.appendChild(d); }
+
+        const btnRow = document.createElement('div');
+        Object.assign(btnRow.style, { display:'flex', gap:'6px', marginTop:'10px' });
+
+        const makeBtn = (label: string, url: string, bg: string, color: string) => {
+          const b = document.createElement('button');
+          Object.assign(b.style, { flex:'1', textAlign:'center', padding:'7px 0', borderRadius:'8px', fontSize:'11px', fontWeight:'700', border:'none', background:bg, color, cursor:'pointer' });
+          b.textContent = label;
+          b.addEventListener('click', (ev) => { ev.stopPropagation(); window.open(url, '_blank'); });
+          return b;
+        };
+        btnRow.appendChild(makeBtn('카카오맵', kakaoUrl, '#FAE100', '#3A1D1D'));
+        btnRow.appendChild(makeBtn('네이버지도', naverUrl, '#03C75A', '#fff'));
+
+        wrap.appendChild(title);
+        wrap.appendChild(badge);
+        wrap.appendChild(info);
+        wrap.appendChild(btnRow);
+
+        K.event.preventMap(wrap);
+        ov.setContent(wrap); ov.setPosition(pos); ov.setMap(map);
       });
       overlays.push(overlay);
     });
@@ -283,19 +321,32 @@ export default function MapView({ location, riverData }: Props) {
 
       const overlay = new K.CustomOverlay({ position: pos, content: el, map, zIndex: 3 });
 
-      const html = `<div style="background:#fff;border-radius:12px;padding:12px 14px;min-width:170px;box-shadow:0 4px 16px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
-        <div style="font-size:13px;font-weight:700;color:#191F28;margin-bottom:8px">📹 ${spot.name}</div>
-        <a href="${spot.url}" target="_blank" rel="noopener" style="display:inline-block;font-size:12px;font-weight:600;color:#fff;background:#3182F6;padding:5px 12px;border-radius:8px;text-decoration:none;">영상 보기 →</a>
-        <div style="font-size:10px;color:#B0B8C1;margin-top:6px">외부 사이트로 이동합니다</div>
-      </div>`;
-
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const ov = overlayRef.current as { setContent: (h: HTMLElement) => void; setPosition: (p: unknown) => void; setMap: (v: unknown) => void };
-        const popEl = document.createElement('div');
-        popEl.innerHTML = html;
-        K.event.preventMap(popEl);
-        ov.setContent(popEl); ov.setPosition(pos); ov.setMap(map);
+
+        const wrap = document.createElement('div');
+        Object.assign(wrap.style, { background:'#fff', borderRadius:'12px', padding:'12px 14px', minWidth:'170px', boxShadow:'0 4px 16px rgba(0,0,0,0.12)', fontFamily:"-apple-system,'Noto Sans KR',sans-serif" });
+
+        const nameEl = document.createElement('div');
+        Object.assign(nameEl.style, { fontSize:'13px', fontWeight:'700', color:'#191F28', marginBottom:'10px' });
+        nameEl.textContent = `📹 ${spot.name}`;
+
+        const btn = document.createElement('button');
+        Object.assign(btn.style, { fontSize:'12px', fontWeight:'600', color:'#fff', background:'#3182F6', padding:'6px 14px', borderRadius:'8px', border:'none', cursor:'pointer' });
+        btn.textContent = '영상 보기 →';
+        btn.addEventListener('click', (ev) => { ev.stopPropagation(); window.open(spot.url, '_blank'); });
+
+        const hint = document.createElement('div');
+        Object.assign(hint.style, { fontSize:'10px', color:'#B0B8C1', marginTop:'6px' });
+        hint.textContent = '외부 사이트로 이동합니다';
+
+        wrap.appendChild(nameEl);
+        wrap.appendChild(btn);
+        wrap.appendChild(hint);
+
+        K.event.preventMap(wrap);
+        ov.setContent(wrap); ov.setPosition(pos); ov.setMap(map);
       });
       overlays.push(overlay);
     });
