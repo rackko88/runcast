@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { theme } from '@runcast/ui';
 import type { WeatherData } from '@/types';
@@ -140,7 +140,7 @@ function humidityLabel(h: number) {
 
 function hourLabel(h: number, isFirst: boolean) {
   if (isFirst) return '지금';
-  return h === 0 ? '자정' : h < 12 ? `오전${h}시` : h === 12 ? '오후12시' : `오후${h - 12}시`;
+  return `${String(h).padStart(2, '0')}시`;
 }
 
 function fmtDate(dateStr: string) {
@@ -150,7 +150,7 @@ function fmtDate(dateStr: string) {
 
 function fmtTime(d: Date) {
   const h = d.getHours(), m = d.getMinutes();
-  return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${String(m).padStart(2, '0')}`;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 // ── 스타일 ──
@@ -288,17 +288,36 @@ function DataCell({ label, value, sub }: { label: string; value: string; sub?: s
   );
 }
 
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`,
+      { headers: { 'Accept-Language': 'ko' } }
+    );
+    if (!res.ok) return '';
+    const data = await res.json();
+    const addr = data.address ?? {};
+    return addr.city_district || addr.county || addr.city || addr.state || '';
+  } catch { return ''; }
+}
+
 interface Props {
   weather: WeatherData | null;
   loading: boolean;
   locationLabel?: string;
+  location?: { lat: number; lng: number } | null;
 }
 
-export default function WeatherDetail({ weather, loading, locationLabel }: Props) {
+export default function WeatherDetail({ weather, loading, locationLabel, location }: Props) {
   // 훅은 early return 앞에 모두 선언
   const now = useMemo(() => new Date(), [weather]);
   const [selectedHourIdx, setSelectedHourIdx] = useState<number | null>(null);
   const hourlyScrollRef = useRef<HTMLDivElement>(null);
+  const [areaName, setAreaName] = useState('');
+  useEffect(() => {
+    if (!location) return;
+    reverseGeocode(location.lat, location.lng).then(setAreaName);
+  }, [location?.lat, location?.lng]);
 
   if (loading) return <Placeholder>날씨 불러오는 중…</Placeholder>;
   if (!weather) return <Placeholder>날씨 정보를 가져올 수 없습니다</Placeholder>;
@@ -329,7 +348,7 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
       <Card>
         <WeatherMeta>
           <SectionTitle style={{ margin: 0 }}>현재 날씨</SectionTitle>
-          <MetaLeft>{locationLabel ?? '위치 확인 중'} · {fmtTime(now)}</MetaLeft>
+          <MetaLeft>{locationLabel ?? '위치 확인 중'}{areaName ? ` (${areaName})` : ''} · {fmtTime(now)}</MetaLeft>
         </WeatherMeta>
         <Current>
           <BigIcon>{weather.icon}</BigIcon>

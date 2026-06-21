@@ -173,7 +173,7 @@ function AppLayout() {
     switch (tab) {
       case 'river':   return <RiverDetail riverData={riverData} loading={rLoading} isMock={isMock} lastUpdated={lastUpdated} onRefresh={refresh} onStationClick={(lat, lng) => { moveToRef.current?.(lat, lng); navigate('/'); }} />;
       case 'notice':  return <NoticeBoard notices={notices} loading={nLoading} lastUpdated={nUpdated} onRefresh={nRefresh} />;
-      case 'weather': return <WeatherDetail weather={weather} loading={wLoading} locationLabel={locationLabel} />;
+      case 'weather': return <WeatherDetail weather={weather} loading={wLoading} locationLabel={locationLabel} location={activeLoc} />;
 
       default:        return null;
     }
