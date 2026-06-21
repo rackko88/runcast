@@ -222,11 +222,23 @@ export default function MapView({ location, riverData }: Props) {
         spot.note  && `<div style="font-size:11px;color:#8B95A1;margin-top:2px">${spot.note}</div>`,
       ].filter(Boolean).join('');
 
-      const html = `<div style="background:#fff;border-radius:14px;padding:14px 16px;min-width:190px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
+      const kakaoUrl = `https://map.kakao.com/link/to/${encodeURIComponent(spot.name)},${spot.lat},${spot.lng}`;
+      const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(spot.name)}?c=${spot.lng},${spot.lat},16,0,0,0,dh`;
+
+      const html = `<div style="background:#fff;border-radius:14px;padding:14px 16px;min-width:200px;box-shadow:0 4px 20px rgba(0,0,0,0.12);font-family:-apple-system,'Noto Sans KR',sans-serif;">
         <div style="font-size:14px;font-weight:700;color:#191F28;margin-bottom:6px">${spot.name}</div>
         <div style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:${cfg.color}22;color:${cfg.color};margin-bottom:10px">${cfg.label}</div>
         ${rows}
-        <div style="font-size:11px;color:#B0B8C1;margin-top:8px;text-align:right">탭하면 닫힘</div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <a href="${kakaoUrl}" target="_blank" rel="noopener"
+             style="flex:1;text-align:center;padding:6px 0;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;background:#FAE100;color:#3A1D1D">
+            카카오맵
+          </a>
+          <a href="${naverUrl}" target="_blank" rel="noopener"
+             style="flex:1;text-align:center;padding:6px 0;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;background:#03C75A;color:#fff">
+            네이버지도
+          </a>
+        </div>
       </div>`;
 
       el.addEventListener('click', (e) => {
