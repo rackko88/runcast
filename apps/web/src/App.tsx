@@ -114,7 +114,11 @@ const ViewMap = styled.div<{ $mobileHidden: boolean }>`
 `;
 const ViewTab = styled.div`
   position: absolute; inset: 0; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   background: ${theme.colors.gray50}; padding: 16px;
+  /* 고정된 하단 탭바에 콘텐츠가 가려지지 않도록 하단 여백 확보 */
+  padding-bottom: calc(16px + ${theme.sizes.tabsH} + env(safe-area-inset-bottom, 0px));
   @media (min-width: ${theme.bp.pc}) { display: none !important; }
 `;
 const Legend = styled.div`

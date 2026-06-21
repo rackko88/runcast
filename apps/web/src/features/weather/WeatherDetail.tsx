@@ -224,6 +224,9 @@ const HourlyScrollBtn = styled.button<{ $dir: 'left' | 'right' }>`
 `;
 const HourlyScroll = styled.div`
   display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
+  /* 가로 캐러셀이 세로 스크롤 제스처를 가로채지 않도록: 세로 스와이프는 페이지로 넘김 */
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
   scrollbar-width: none; &::-webkit-scrollbar { display: none; }
 `;
 const HourCell = styled.div<{ $now: boolean }>`
