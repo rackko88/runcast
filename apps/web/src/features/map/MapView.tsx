@@ -68,9 +68,10 @@ interface Props {
   location: { lat: number; lng: number } | null;
   riverData: RiverStation[];
   moveToRef?: React.MutableRefObject<((lat: number, lng: number) => void) | null>;
+  getMapCenterRef?: React.MutableRefObject<(() => { lat: number; lng: number } | null) | null>;
 }
 
-export default function MapView({ location, riverData, moveToRef }: Props) {
+export default function MapView({ location, riverData, moveToRef, getMapCenterRef }: Props) {
   const mapRef     = useRef<HTMLDivElement>(null);
   const mapInst    = useRef<unknown>(null);
   const overlayRef = useRef<unknown>(null);
@@ -375,6 +376,17 @@ export default function MapView({ location, riverData, moveToRef }: Props) {
       (mapInst.current as { setLevel: (v: number) => void }).setLevel(4);
     };
   }, [mapReady, moveToRef]);
+
+  // 지도 중심 좌표 반환 함수 노출
+  useEffect(() => {
+    if (!getMapCenterRef) return;
+    getMapCenterRef.current = () => {
+      if (!mapInst.current) return null;
+      const K = window.kakao.maps;
+      const center = (mapInst.current as { getCenter: () => unknown }).getCenter();
+      return { lat: (center as { getLat: () => number }).getLat(), lng: (center as { getLng: () => number }).getLng() };
+    };
+  }, [mapReady, getMapCenterRef]);
 
   return (
     <MapWrapper>

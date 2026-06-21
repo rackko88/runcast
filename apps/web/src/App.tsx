@@ -145,6 +145,7 @@ function AppLayout() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const moveToRef = useRef<((lat: number, lng: number) => void) | null>(null);
+  const getMapCenterRef = useRef<(() => { lat: number; lng: number } | null) | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -156,7 +157,7 @@ function AppLayout() {
 
   const { location, error: locError } = useLocationStore();
   const locationLabel = !location ? '위치 확인 중' : locError ? '서울 시청 기준' : '내 위치 기준';
-  const { weather, loading: wLoading } = useWeather(location);
+  const { weather, loading: wLoading, activeLoc, refresh: wRefresh } = useWeather(location);
   const { riverData, loading: rLoading, isMock, lastUpdated, refresh } = useRiverData();
   const { notices, loading: nLoading, lastUpdated: nUpdated, refresh: nRefresh } = useNotices();
 
@@ -213,8 +214,11 @@ function AppLayout() {
 
       <AppBody>
         <ViewMap $mobileHidden={activeTab !== 'map'}>
-          <MapView location={location} riverData={riverData} moveToRef={moveToRef} />
-          <WeatherFloat weather={weather} loading={wLoading} location={location} />
+          <MapView location={location} riverData={riverData} moveToRef={moveToRef} getMapCenterRef={getMapCenterRef} />
+          <WeatherFloat
+            weather={weather} loading={wLoading} location={activeLoc}
+            onRefresh={() => { const c = getMapCenterRef.current?.(); wRefresh(c ?? undefined); }}
+          />
           <Legend>
             {(['정상','주의','경계','위험','통제'] as const).map(status => (
               <LegendItem key={status}>

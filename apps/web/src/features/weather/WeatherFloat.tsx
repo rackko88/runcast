@@ -57,10 +57,17 @@ const ToggleBtn = styled.button`
 
 const LocLabel = styled.div`font-size: 10px; color: ${theme.colors.gray400}; font-weight: 500; margin-bottom: 6px;`;
 
+const RefreshBtn = styled.button`
+  background: none; border: none; cursor: pointer;
+  color: ${theme.colors.gray400}; font-size: 13px; padding: 0; line-height: 1;
+  &:hover { color: ${theme.colors.gray600}; }
+`;
+
 interface Props {
   weather: WeatherData | null;
   loading: boolean;
   location?: { lat: number; lng: number } | null;
+  onRefresh?: () => void;
 }
 
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
@@ -77,7 +84,7 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
   } catch { return ''; }
 }
 
-export default function WeatherFloat({ weather, loading, location }: Props) {
+export default function WeatherFloat({ weather, loading, location, onRefresh }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [areaName, setAreaName] = useState('');
 
@@ -120,7 +127,10 @@ export default function WeatherFloat({ weather, loading, location }: Props) {
             </Info>
           </FullLeft>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-            <ToggleBtn onClick={() => setCollapsed(true)}>▲</ToggleBtn>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {onRefresh && <RefreshBtn onClick={onRefresh} title="지도 중심 기준 재조회">↻</RefreshBtn>}
+              <ToggleBtn onClick={() => setCollapsed(true)}>▲</ToggleBtn>
+            </div>
             <Hum>💧{weather.humidity}% 습도</Hum>
           </div>
         </FullHeader>
