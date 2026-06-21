@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { theme } from '@runcast/ui';
 import type { WeatherData } from '@/types';
@@ -208,6 +208,20 @@ const UvMarker = styled.div<{ $pos: number }>`
 `;
 
 // 시간별
+const HourlyWrap = styled.div`position: relative;`;
+const HourlyScrollBtn = styled.button<{ $dir: 'left' | 'right' }>`
+  display: none;
+  @media (min-width: 768px) {
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 50%; transform: translateY(-50%);
+    ${p => p.$dir === 'left' ? 'left: -14px;' : 'right: -14px;'}
+    width: 28px; height: 28px; border-radius: 50%;
+    background: ${theme.colors.white}; border: 1px solid ${theme.colors.gray200};
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12); cursor: pointer; z-index: 2;
+    font-size: 14px; color: ${theme.colors.gray600};
+    &:hover { background: ${theme.colors.gray50}; }
+  }
+`;
 const HourlyScroll = styled.div`
   display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
   scrollbar-width: none; &::-webkit-scrollbar { display: none; }
@@ -291,6 +305,10 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
   const grade = pmGrade(weather.pm10, weather.pm25);
   const nowH  = now.getHours();
   const [selectedHourIdx, setSelectedHourIdx] = useState<number | null>(null);
+  const hourlyScrollRef = useRef<HTMLDivElement>(null);
+  function scrollHourly(dir: number) {
+    hourlyScrollRef.current?.scrollBy({ left: dir * 190, behavior: 'smooth' });
+  }
 
   return (
     <Wrap>
@@ -343,7 +361,10 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
       {(weather.hourly?.length ?? 0) > 0 && (
         <Card>
           <SectionTitle>시간별 예보</SectionTitle>
-          <HourlyScroll>
+          <HourlyWrap>
+            <HourlyScrollBtn $dir="left" onClick={() => scrollHourly(-1)}>‹</HourlyScrollBtn>
+            <HourlyScrollBtn $dir="right" onClick={() => scrollHourly(1)}>›</HourlyScrollBtn>
+          <HourlyScroll ref={hourlyScrollRef}>
             {weather.hourly!.map((h, i) => {
               const isNow = i === 0;
               const sel = selectedHourIdx === i;
@@ -366,6 +387,7 @@ export default function WeatherDetail({ weather, loading, locationLabel }: Props
               );
             })}
           </HourlyScroll>
+          </HourlyWrap>
           {selectedHourIdx !== null && (() => {
             const h = weather.hourly![selectedHourIdx];
             return (

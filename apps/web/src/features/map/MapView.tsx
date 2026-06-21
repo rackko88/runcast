@@ -196,14 +196,14 @@ export default function MapView({ location, riverData }: Props) {
 
     const S = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">`;
     const ICON_SVG: Record<string, string> = {
-      // Timer (스톱워치) — 육상트랙
-      '육상트랙': `${S}<circle cx="12" cy="14" r="8"/><path d="M12 6v8l3 2"/><path d="M10 2h4"/></svg>`,
-      // Waves — 한강코스
-      '한강코스': `${S}<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`,
-      // Tree (삼각형 나무) — 공원코스
-      '공원코스': `${S}<polygon points="12 3 21 19 3 19" stroke-linejoin="round"/><line x1="12" y1="19" x2="12" y2="23"/></svg>`,
-      // Mountain — 산악코스
-      '산악코스': `${S}<path d="m3 17 4-8 4 4 4-4 4 8"/><path d="M2 17h20"/></svg>`,
+      // Activity (운동 심박) — 육상트랙
+      '육상트랙': `${S}<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+      // Water drop — 한강코스
+      '한강코스': `${S}<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
+      // Leaf — 공원코스
+      '공원코스': `${S}<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`,
+      // Mountain range — 산악코스
+      '산악코스': `${S}<path d="M3 20l5-8 4 4 4-4 6 8H3z"/></svg>`,
     };
 
     if (!showTracks) return;

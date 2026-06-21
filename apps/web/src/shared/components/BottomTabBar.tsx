@@ -11,14 +11,19 @@ const TABS = [
 ];
 
 const Nav = styled.nav`
-  height: ${theme.sizes.tabsH}; flex-shrink: 0;
+  flex-shrink: 0;
   display: flex; background: ${theme.colors.white};
   border-top: 1px solid ${theme.colors.gray200};
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   @media (min-width: ${theme.bp.pc}) { display: none; }
 `;
+const BtnInner = styled.div`
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; height: ${theme.sizes.tabsH};
+`;
 const Btn = styled.button<{ $active: boolean }>`
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px; background: none; border: none; cursor: pointer; position: relative; padding: 0;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  background: none; border: none; cursor: pointer; position: relative; padding: 0;
   color: ${p => p.$active ? theme.colors.blue : theme.colors.gray400};
   transition: color 0.15s;
 `;
@@ -45,10 +50,12 @@ export default function BottomTabBar({ alertCount, hasEmergency }: Props) {
           $active={activeTab === id}
           onClick={() => navigate(id === 'map' ? '/' : `/${id}`)}
         >
-          <Icon size={22} strokeWidth={activeTab === id ? 2.2 : 1.8} />
-          <Label>{label}</Label>
-          {id === 'river'  && alertCount > 0  && <Badge>{alertCount}</Badge>}
-          {id === 'notice' && hasEmergency     && <Badge>!</Badge>}
+          <BtnInner>
+            <Icon size={22} strokeWidth={activeTab === id ? 2.2 : 1.8} />
+            <Label>{label}</Label>
+            {id === 'river'  && alertCount > 0  && <Badge>{alertCount}</Badge>}
+            {id === 'notice' && hasEmergency     && <Badge>!</Badge>}
+          </BtnInner>
         </Btn>
       ))}
     </Nav>
