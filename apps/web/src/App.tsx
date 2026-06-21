@@ -118,10 +118,14 @@ const ViewTab = styled.div`
   @media (min-width: ${theme.bp.pc}) { display: none !important; }
 `;
 const Legend = styled.div`
-  position: absolute; bottom: 12px; left: 12px;
+  position: absolute; left: 12px;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 12px);
   background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
   border-radius: ${theme.radius.sm}; padding: 7px 12px;
   display: flex; gap: 12px; box-shadow: ${theme.shadows.sm}; z-index: 50;
+  @media (min-width: ${theme.bp.pc}) {
+    bottom: 12px;
+  }
 `;
 const LegendItem = styled.div`display: flex; align-items: center; gap: 5px; font-size: 11px; color: ${theme.colors.gray800}; font-weight: 500;`;
 const LegendDot = styled.span<{ $bg: string }>`width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: ${p => p.$bg};`;
