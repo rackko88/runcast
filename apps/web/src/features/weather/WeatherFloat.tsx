@@ -15,12 +15,16 @@ function pmGrade(pm10?: number, pm25?: number) {
 }
 
 const Card = styled.div<{ $alert: boolean }>`
-  position: absolute; top: 12px; right: 12px;
+  position: absolute;
+  bottom: 12px; right: 12px;
   background: ${theme.colors.white};
   border-radius: ${theme.radius.md};
   box-shadow: ${theme.shadows.md};
   z-index: 50;
   ${p => p.$alert && `outline: 2px solid ${theme.colors.blue};`}
+  @media (min-width: ${theme.bp.pc}) {
+    top: 12px; bottom: auto;
+  }
 `;
 
 /* 접힌 상태 */
@@ -85,7 +89,8 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
 }
 
 export default function WeatherFloat({ weather, loading, location, onRefresh }: Props) {
-  const [collapsed, setCollapsed] = useState(false);
+  const isMobile = window.innerWidth < 768;
+  const [collapsed, setCollapsed] = useState(isMobile);
   const [areaName, setAreaName] = useState('');
 
   useEffect(() => {
