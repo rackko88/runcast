@@ -5,10 +5,10 @@ import type { WeatherData } from '@/types';
 function pmGrade(pm10?: number, pm25?: number) {
   if (pm10 == null) return null;
   const p25 = pm25 ?? 0;
-  if (pm10 <= 30  && p25 <= 15) return { text: '좋음',   color: '#22c55e' };
-  if (pm10 <= 80  && p25 <= 35) return { text: '보통',   color: '#f59e0b' };
-  if (pm10 <= 150 && p25 <= 75) return { text: '나쁨',   color: '#ef4444' };
-  return                               { text: '매우나쁨',color: '#7c3aed' };
+  if (pm10 <= 30  && p25 <= 15) return { text: '좋음',    color: '#22c55e' };
+  if (pm10 <= 80  && p25 <= 35) return { text: '보통',    color: '#f59e0b' };
+  if (pm10 <= 150 && p25 <= 75) return { text: '나쁨',    color: '#ef4444' };
+  return                               { text: '매우나쁨', color: '#7c3aed' };
 }
 function runScore(w: WeatherData): number {
   let s = 100;
@@ -22,12 +22,22 @@ function runScore(w: WeatherData): number {
   return Math.max(0, s);
 }
 function scoreInfo(score: number) {
-  if (score >= 80) return { text: '최적',  color: '#22c55e' };
-  if (score >= 60) return { text: '양호',  color: '#f59e0b' };
-  if (score >= 40) return { text: '보통',  color: '#f97316' };
-  return                  { text: '비추천',color: '#ef4444' };
+  if (score >= 80) return { text: '최적',   color: '#22c55e' };
+  if (score >= 60) return { text: '양호',   color: '#f59e0b' };
+  if (score >= 40) return { text: '보통',   color: '#f97316' };
+  return                  { text: '비추천', color: '#ef4444' };
+}
+function windDirLabel(deg?: number): string {
+  if (deg == null) return '';
+  const dirs = ['북','북동','동','남동','남','남서','서','북서'];
+  return dirs[Math.round(deg / 45) % 8];
+}
+function hourLabel(h: number): string {
+  if (h === new Date().getHours()) return '지금';
+  return h < 12 ? `오전 ${h}시` : h === 12 ? '오후 12시' : `오후 ${h - 12}시`;
 }
 
+// ── 스타일 ──
 const Wrap = styled.div`display: flex; flex-direction: column; gap: 12px;`;
 const Placeholder = styled.div`font-size: 14px; color: ${theme.colors.gray400}; text-align: center; padding: 40px 0;`;
 const Card = styled.div`background: ${theme.colors.white}; border-radius: ${theme.radius.md}; padding: 16px; box-shadow: ${theme.shadows.sm};`;
@@ -48,6 +58,30 @@ const CellVal = styled.span`font-size: 15px; font-weight: 700; color: ${theme.co
 const AirSummary = styled.div`font-size: 18px; font-weight: 700; margin-bottom: 10px;`;
 const Source = styled.div`font-size: 11px; color: ${theme.colors.gray400}; text-align: right; padding-top: 4px;`;
 
+// 시간별
+const HourlyScroll = styled.div`
+  display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none; &::-webkit-scrollbar { display: none; }
+`;
+const HourCell = styled.div<{ $now: boolean }>`
+  flex: 0 0 60px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: ${p => p.$now ? theme.colors.black : theme.colors.gray50};
+  border-radius: 12px; padding: 10px 6px;
+`;
+const HourTime = styled.span<{ $now: boolean }>`font-size: 10px; font-weight: 600; color: ${p => p.$now ? 'rgba(255,255,255,0.7)' : theme.colors.gray400};`;
+const HourIcon = styled.span`font-size: 20px; line-height: 1;`;
+const HourTemp = styled.span<{ $now: boolean }>`font-size: 14px; font-weight: 700; color: ${p => p.$now ? '#fff' : theme.colors.black};`;
+const HourRain = styled.span<{ $show: boolean }>`font-size: 10px; color: #60a5fa; font-weight: 600; opacity: ${p => p.$show ? 1 : 0};`;
+
+// 주간
+const WeekRow = styled.div`display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid ${theme.colors.gray100}; &:last-child { border-bottom: none; }`;
+const WeekDay = styled.span`font-size: 13px; font-weight: 600; color: ${theme.colors.black}; width: 40px; flex-shrink: 0;`;
+const WeekIcon = styled.span`font-size: 20px; flex: 1; text-align: center;`;
+const WeekTemps = styled.div`display: flex; gap: 6px; align-items: center; width: 80px; justify-content: flex-end; flex-shrink: 0;`;
+const WeekMax = styled.span`font-size: 13px; font-weight: 700; color: ${theme.colors.black};`;
+const WeekMin = styled.span`font-size: 13px; color: ${theme.colors.gray400};`;
+const WeekRain = styled.span`font-size: 12px; color: #60a5fa; font-weight: 600; width: 36px; text-align: right; flex-shrink: 0;`;
+
 function DataCell({ label, value }: { label: string; value: string }) {
   return <Cell><CellLabel>{label}</CellLabel><CellVal>{value}</CellVal></Cell>;
 }
@@ -60,10 +94,12 @@ export default function WeatherDetail({ weather, loading }: Props) {
 
   const grade = pmGrade(weather.pm10, weather.pm25);
   const score = runScore(weather);
-  const si = scoreInfo(score);
+  const si    = scoreInfo(score);
+  const nowH  = new Date().getHours();
 
   return (
     <Wrap>
+      {/* 러닝 적합도 */}
       <Card>
         <ScoreHeader>
           <ScoreTitle>러닝 적합도</ScoreTitle>
@@ -72,6 +108,7 @@ export default function WeatherDetail({ weather, loading }: Props) {
         <ScoreTrack><ScoreFill $w={score} $bg={si.color} /></ScoreTrack>
       </Card>
 
+      {/* 현재 날씨 */}
       <Card>
         <SectionTitle>현재 날씨</SectionTitle>
         <Current>
@@ -83,12 +120,42 @@ export default function WeatherDetail({ weather, loading }: Props) {
         </Current>
         <Grid>
           <DataCell label="습도" value={`${weather.humidity}%`} />
-          <DataCell label="풍속" value={`${weather.windSpeed}km/h`} />
-          {weather.precipitation > 0 && <DataCell label="강수량" value={`${weather.precipitation}mm`} />}
-          {(weather.precipProbability ?? 0) > 0 && <DataCell label="강수확률" value={`${weather.precipProbability}%`} />}
+          <DataCell label="체감온도" value={weather.feelsLike != null ? `${weather.feelsLike}°C` : '-'} />
+          <DataCell
+            label="바람"
+            value={`${weather.windSpeed}km/h${weather.windDirection != null ? ` ${windDirLabel(weather.windDirection)}` : ''}`}
+          />
+          {(weather.precipProbability ?? 0) > 0
+            ? <DataCell label="강수확률" value={`${weather.precipProbability}%`} />
+            : weather.precipitation > 0
+            ? <DataCell label="강수량" value={`${weather.precipitation}mm`} />
+            : null}
         </Grid>
       </Card>
 
+      {/* 시간별 예보 */}
+      {(weather.hourly?.length ?? 0) > 0 && (
+        <Card>
+          <SectionTitle>시간별 예보</SectionTitle>
+          <HourlyScroll>
+            {weather.hourly!.map((h, i) => {
+              const isNow = h.hour === nowH && i === 0;
+              return (
+                <HourCell key={i} $now={isNow}>
+                  <HourTime $now={isNow}>{hourLabel(h.hour)}</HourTime>
+                  <HourIcon>{h.icon}</HourIcon>
+                  <HourTemp $now={isNow}>{h.temperature}°</HourTemp>
+                  <HourRain $show={h.precipProbability > 0}>
+                    {h.precipProbability > 0 ? `${h.precipProbability}%` : '　'}
+                  </HourRain>
+                </HourCell>
+              );
+            })}
+          </HourlyScroll>
+        </Card>
+      )}
+
+      {/* 오늘 예보 */}
       {(weather.tempMax != null || weather.sunrise) && (
         <Card>
           <SectionTitle>오늘 예보</SectionTitle>
@@ -109,6 +176,25 @@ export default function WeatherDetail({ weather, loading }: Props) {
         </Card>
       )}
 
+      {/* 주간 예보 */}
+      {(weather.weekly?.length ?? 0) > 0 && (
+        <Card>
+          <SectionTitle>주간 예보</SectionTitle>
+          {weather.weekly!.map((d, i) => (
+            <WeekRow key={i}>
+              <WeekDay>{d.dayLabel}</WeekDay>
+              <WeekIcon>{d.icon}</WeekIcon>
+              <WeekTemps>
+                <WeekMax>{d.tempMax}°</WeekMax>
+                <WeekMin>{d.tempMin}°</WeekMin>
+              </WeekTemps>
+              <WeekRain>{d.precipProbabilityMax > 0 ? `${d.precipProbabilityMax}%` : ''}</WeekRain>
+            </WeekRow>
+          ))}
+        </Card>
+      )}
+
+      {/* 대기질 */}
       {grade && (
         <Card>
           <SectionTitle>대기질</SectionTitle>

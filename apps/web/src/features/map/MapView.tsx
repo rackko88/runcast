@@ -104,8 +104,8 @@ export default function MapView({ location, riverData }: Props) {
       const color  = RIVER_COLORS[status];
       const path   = coords.map(([la, ln]) => new K.LatLng(la, ln));
 
-      const line = new K.Polyline({ map, path, strokeWeight: name === '한강' ? 8 : 5, strokeColor: color, strokeOpacity: 0.9, strokeStyle: 'solid' });
-      const hit  = new K.Polyline({ map, path, strokeWeight: 24, strokeColor: '#fff', strokeOpacity: 0 });
+      const line = new K.Polyline({ map, path, strokeWeight: name === '한강' ? 5 : 3, strokeColor: color, strokeOpacity: 0.85, strokeStyle: 'solid' });
+      const hit  = new K.Polyline({ map, path, strokeWeight: 20, strokeColor: '#fff', strokeOpacity: 0 });
 
       const stations = riverData.filter(s => s.river === name);
       const rows = stations.map(s => `

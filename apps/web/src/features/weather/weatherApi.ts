@@ -1,4 +1,4 @@
-import type { WeatherData } from '@/types';
+import type { WeatherData, HourlyWeather, DailyWeather } from '@/types';
 
 // ── KMA 격자 변환 ──
 const G = { Re:6371.00877, grid:5.0, slat1:30.0, slat2:60.0, olon:126.0, olat:38.0, xo:43, yo:136 };
@@ -70,34 +70,78 @@ async function fetchKmaCurrent(lat: number, lng: number): Promise<Partial<Weathe
 // ── Open-Meteo ──
 const WMO_DESC: Record<number,string>={0:'맑음',1:'대체로 맑음',2:'부분적으로 흐림',3:'흐림',45:'안개',48:'안개',51:'이슬비',53:'이슬비',55:'강한 이슬비',61:'약한 비',63:'비',65:'강한 비',71:'약한 눈',73:'눈',75:'강한 눈',80:'소나기',81:'소나기',82:'강한 소나기',95:'뇌우',96:'뇌우',99:'뇌우'};
 const WMO_ICON: Record<number,string>={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
+const RAIN_CODES = new Set([51,53,55,61,63,65,80,81,82,95,96,99]);
+const DAY_LABELS = ['일','월','화','수','목','금','토'];
 
-async function fetchOpenMeteo(lat: number, lng: number): Promise<Partial<WeatherData>> {
-  const params=new URLSearchParams({latitude:String(lat),longitude:String(lng),current:'temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m',hourly:'precipitation_probability',forecast_days:'1',timezone:'Asia/Seoul'});
-  const res=await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
-  if(!res.ok)throw new Error('Open-Meteo 오류');
-  const data=await res.json();
-  const cur=data.current;
-  const code=cur.weather_code as number;
-  const h=new Date().getHours();
-  return {
-    temperature:Math.round(cur.temperature_2m),
-    humidity:cur.relative_humidity_2m,
-    precipitation:cur.precipitation,
-    windSpeed:Math.round(cur.wind_speed_10m),
-    description:WMO_DESC[code]??'알 수 없음',
-    icon:WMO_ICON[code]??'🌡️',
-    precipProbability:data.hourly.precipitation_probability[h]??0,
-    isRaining:[51,53,55,61,63,65,80,81,82,95,96,99].includes(code),
-    source:'Open-Meteo',
+async function fetchOpenMeteoFull(lat: number, lng: number) {
+  const params = new URLSearchParams({
+    latitude: String(lat), longitude: String(lng),
+    current: 'temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m',
+    hourly: 'temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m',
+    daily: 'temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code,precipitation_probability_max',
+    forecast_days: '7', timezone: 'Asia/Seoul',
+  });
+  const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+  if (!res.ok) throw new Error('Open-Meteo 오류');
+  const data = await res.json();
+
+  // current
+  const cur = data.current;
+  const code = cur.weather_code as number;
+  const nowH = new Date().getHours();
+  const current: Partial<WeatherData> = {
+    temperature: Math.round(cur.temperature_2m),
+    feelsLike: Math.round(cur.apparent_temperature),
+    humidity: cur.relative_humidity_2m,
+    precipitation: cur.precipitation,
+    windSpeed: Math.round(cur.wind_speed_10m),
+    windDirection: Math.round(cur.wind_direction_10m),
+    description: WMO_DESC[code] ?? '알 수 없음',
+    icon: WMO_ICON[code] ?? '🌡️',
+    precipProbability: data.hourly.precipitation_probability[nowH] ?? 0,
+    isRaining: RAIN_CODES.has(code),
+    source: 'Open-Meteo',
   };
-}
 
-async function fetchDaily(lat: number, lng: number) {
-  const params=new URLSearchParams({latitude:String(lat),longitude:String(lng),daily:'temperature_2m_max,temperature_2m_min,sunrise,sunset',forecast_days:'1',timezone:'Asia/Seoul'});
-  const res=await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
-  if(!res.ok)throw new Error('Open-Meteo daily 오류');
-  const data=await res.json();
-  return { tempMax:Math.round(data.daily.temperature_2m_max[0]), tempMin:Math.round(data.daily.temperature_2m_min[0]), sunrise:(data.daily.sunrise[0] as string).slice(-5), sunset:(data.daily.sunset[0] as string).slice(-5) };
+  // hourly — next 24h from current hour
+  const hourly: HourlyWeather[] = [];
+  for (let i = nowH; i < nowH + 24 && i < (data.hourly.time as string[]).length; i++) {
+    const hCode = data.hourly.weather_code[i] as number;
+    hourly.push({
+      hour: i % 24,
+      temperature: Math.round(data.hourly.temperature_2m[i]),
+      feelsLike: Math.round(data.hourly.apparent_temperature[i]),
+      precipProbability: data.hourly.precipitation_probability[i] ?? 0,
+      windSpeed: Math.round(data.hourly.wind_speed_10m[i]),
+      icon: WMO_ICON[hCode] ?? '🌡️',
+      description: WMO_DESC[hCode] ?? '알 수 없음',
+    });
+  }
+
+  // daily (today)
+  const daily = {
+    tempMax: Math.round(data.daily.temperature_2m_max[0]),
+    tempMin: Math.round(data.daily.temperature_2m_min[0]),
+    sunrise: (data.daily.sunrise[0] as string).slice(-5),
+    sunset: (data.daily.sunset[0] as string).slice(-5),
+  };
+
+  // weekly (7 days)
+  const weekly: DailyWeather[] = (data.daily.time as string[]).map((date, i) => {
+    const dCode = data.daily.weather_code[i] as number;
+    const d = new Date(date + 'T00:00:00');
+    return {
+      date,
+      dayLabel: i === 0 ? '오늘' : i === 1 ? '내일' : DAY_LABELS[d.getDay()],
+      tempMax: Math.round(data.daily.temperature_2m_max[i]),
+      tempMin: Math.round(data.daily.temperature_2m_min[i]),
+      precipProbabilityMax: data.daily.precipitation_probability_max[i] ?? 0,
+      icon: WMO_ICON[dCode] ?? '🌡️',
+      description: WMO_DESC[dCode] ?? '알 수 없음',
+    };
+  });
+
+  return { current, hourly, daily, weekly };
 }
 
 async function fetchAirQuality(lat: number, lng: number) {
@@ -109,15 +153,28 @@ async function fetchAirQuality(lat: number, lng: number) {
 }
 
 export async function fetchWeather(lat: number, lng: number): Promise<WeatherData | null> {
-  let current: Partial<WeatherData> | null = null;
-  try { current=await fetchKmaCurrent(lat,lng); } catch(e) { console.warn('KMA 실패→ Open-Meteo:', (e as Error).message); }
-  if (!current) current = await fetchOpenMeteo(lat, lng);
-  if (!current) return null;
+  const [kmaResult, meteoResult, airResult] = await Promise.allSettled([
+    fetchKmaCurrent(lat, lng),
+    fetchOpenMeteoFull(lat, lng),
+    fetchAirQuality(lat, lng),
+  ]);
 
-  const [daily,air]=await Promise.allSettled([fetchDaily(lat,lng),fetchAirQuality(lat,lng)]);
+  const meteo = meteoResult.status === 'fulfilled' ? meteoResult.value : null;
+  const kma   = kmaResult.status   === 'fulfilled' ? kmaResult.value   : null;
+  const air   = airResult.status   === 'fulfilled' ? airResult.value   : {};
+
+  if (!kma && !meteo) return null;
+
+  // KMA가 더 정확한 현재값 제공, 나머지(feelsLike, windDir 등)는 Open-Meteo로 보완
+  const current: Partial<WeatherData> = kma
+    ? { ...meteo?.current, ...kma }
+    : (meteo?.current ?? {});
+
   return {
     ...current,
-    ...(daily.status==='fulfilled'?daily.value:{}),
-    ...(air.status==='fulfilled'?air.value:{}),
+    ...(meteo?.daily ?? {}),
+    hourly: meteo?.hourly ?? [],
+    weekly: meteo?.weekly ?? [],
+    ...air,
   } as WeatherData;
 }
