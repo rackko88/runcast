@@ -207,7 +207,7 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
       el.style.cursor = 'pointer';
       el.innerHTML = ICON_SVG[spot.type] ?? '';
       const kakaoUrl = `https://map.kakao.com/link/to/${encodeURIComponent(spot.name)},${spot.lat},${spot.lng}`;
-      const naverUrl = `https://map.naver.com/v5/directions/#/${spot.lng},${spot.lat},${encodeURIComponent(spot.name)}`;
+      const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(spot.name)}?c=${spot.lng},${spot.lat},15,0,0,0,dh`;
       el.addEventListener('click', (e) => { e.stopPropagation(); setPopup({ kind: 'spot', spot, kakaoUrl, naverUrl }); });
       overlays.push(new K.CustomOverlay({ position: pos, content: el, map, zIndex: 4 }));
     });
