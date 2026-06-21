@@ -65,19 +65,15 @@ interface Props {
 
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
   try {
-    const key = import.meta.env.VITE_KAKAO_MAP_KEY as string | undefined;
-    if (!key) return '';
     const res = await fetch(
-      `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${lng}&y=${lat}`,
-      { headers: { Authorization: `KakaoAK ${key}` } }
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`,
+      { headers: { 'Accept-Language': 'ko' } }
     );
     if (!res.ok) return '';
     const data = await res.json();
-    const region = data.documents?.[0];
-    if (!region) return '';
-    const gu  = region.region_2depth_name as string;
-    const si  = region.region_1depth_name as string;
-    return gu || si || '';
+    const addr = data.address ?? {};
+    // 구 > 군 > 시 순으로 우선
+    return addr.city_district || addr.county || addr.city || addr.state || '';
   } catch { return ''; }
 }
 
