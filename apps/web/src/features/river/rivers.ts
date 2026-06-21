@@ -1,16 +1,22 @@
 import type { RiverStatus, StationConfig } from '@/types';
 
+// HRFCO waterlevel/info API 기준 실제 관측소 코드 (2025.06 확인)
+// 청계천·강서 한강은 공식 수위 관측소 없음
 export const STATIONS: StationConfig[] = [
-  { id: '1018680', name: '청계천(고산자교)', river: '청계천', lat: 37.5692, lng: 127.0321, warnLevel: 2.5, dangerLevel: 3.5 },
-  { id: '1018660', name: '청계천(마전교)',   river: '청계천', lat: 37.5739, lng: 127.0047, warnLevel: 2.5, dangerLevel: 3.5 },
-  { id: '1018290', name: '중랑천(군자교)',   river: '중랑천', lat: 37.5608, lng: 127.0825, warnLevel: 4.0, dangerLevel: 5.5 },
-  { id: '1018280', name: '중랑천(면목교)',   river: '중랑천', lat: 37.5752, lng: 127.0813, warnLevel: 4.0, dangerLevel: 5.5 },
-  { id: '1018670', name: '중랑천(망우교)',   river: '중랑천', lat: 37.6054, lng: 127.0917, warnLevel: 3.5, dangerLevel: 5.0 },
-  { id: '1017680', name: '한강(한강대교)',   river: '한강',   lat: 37.5156, lng: 126.9743, warnLevel: 7.5, dangerLevel: 9.5 },
-  { id: '1017770', name: '한강(청담대교)',   river: '한강',   lat: 37.5193, lng: 127.0539, warnLevel: 6.0, dangerLevel: 8.0 },
-  { id: '1017650', name: '한강(가양대교)',   river: '한강',   lat: 37.5663, lng: 126.8571, warnLevel: 7.0, dangerLevel: 9.0 },
-  { id: '1018490', name: '안양천(안양대교)', river: '안양천', lat: 37.5282, lng: 126.8745, warnLevel: 3.0, dangerLevel: 4.5 },
-  { id: '1018000', name: '탄천(탄천교)',     river: '탄천',   lat: 37.4953, lng: 127.0923, warnLevel: 2.5, dangerLevel: 3.5 },
+  // 한강 본류 (강동→강서)
+  { id: '1018640', name: '한강(광진교)',   river: '한강', lat: 37.5456, lng: 127.1103, warnLevel: 8.6,  dangerLevel: 10.6 },
+  { id: '1018662', name: '한강(청담대교)', river: '한강', lat: 37.5231, lng: 127.0628, warnLevel: 10.1, dangerLevel: 12.6 },
+  { id: '1018680', name: '한강(잠수교)',   river: '한강', lat: 37.5172, lng: 126.9953, warnLevel: 5.5,  dangerLevel: 6.2  },
+  { id: '1018683', name: '한강(한강대교)', river: '한강', lat: 37.5144, lng: 126.9567, warnLevel: 8.5,  dangerLevel: 10.5 },
+  // 중랑천
+  { id: '1018670', name: '중랑천(월계2교)', river: '중랑천', lat: 37.6242, lng: 127.0500, warnLevel: 3.9, dangerLevel: 5.1 },
+  { id: '1018675', name: '중랑천(중랑교)',  river: '중랑천', lat: 37.5925, lng: 127.0706, warnLevel: 5.0, dangerLevel: 6.5 },
+  // 안양천
+  { id: '1018697', name: '안양천(오금교)',   river: '안양천', lat: 37.5083, lng: 126.8742, warnLevel: 7.0, dangerLevel: 9.0 },
+  { id: '1018695', name: '안양천(너부대교)', river: '안양천', lat: 37.4789, lng: 126.8456, warnLevel: 3.5, dangerLevel: 4.5 },
+  // 탄천
+  { id: '1018658', name: '탄천(대치교)', river: '탄천', lat: 37.4983, lng: 127.0744, warnLevel: 8.7, dangerLevel: 11.1 },
+  { id: '1018655', name: '탄천(대곡교)', river: '탄천', lat: 37.4689, lng: 127.1225, warnLevel: 5.8, dangerLevel: 7.1  },
 ];
 
 // OSM Overpass API 기반 실제 강 경로 좌표
