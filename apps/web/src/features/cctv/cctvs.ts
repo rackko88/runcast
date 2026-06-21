@@ -8,8 +8,8 @@ export interface CctvSpot {
 
 // 서울시 한강사업본부 CCTV 및 수자원공사 CCTV 주요 지점
 // 영상: 홍수통제소(hrfco.go.kr) 또는 서울시 하천정보시스템(river.seoul.go.kr)
-// 홍수통제소 CCTV 목록 (실제 영상 확인 가능)
-const HRFCO = 'https://www.hrfco.go.kr/web/cameraList.do';
+// 홍수통제소 주요지점 수위동영상 페이지
+const HRFCO = 'https://www.hrfco.go.kr/sumun/cctvRtmp.do';
 
 export const CCTV_SPOTS: CctvSpot[] = [
   // ── 한강 본류 ──
