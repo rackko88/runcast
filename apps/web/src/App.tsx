@@ -23,7 +23,8 @@ import { RIVER_COLORS } from '@/features/river/rivers';
 const pulse = keyframes`0%,100%{opacity:1} 50%{opacity:.7}`;
 
 const AppRoot = styled.div`
-  display: flex; flex-direction: column; height: 100dvh;
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
   font-family: -apple-system, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
   background: ${theme.colors.gray50};
   @media (min-width: ${theme.bp.pc}) { flex-direction: row; }
@@ -32,18 +33,18 @@ const Sidebar = styled.div`
   flex-shrink: 0; background: ${theme.colors.white};
   border-bottom: 1px solid ${theme.colors.gray200};
   @media (min-width: ${theme.bp.pc}) {
-    width: ${theme.sizes.sidebar}; height: 100dvh;
+    width: ${theme.sizes.sidebar}; height: 100%;
     display: flex; flex-direction: column;
     border-right: 1px solid ${theme.colors.gray200}; border-bottom: none;
   }
 `;
 const AppHeader = styled.header`
-  height: calc(${theme.sizes.headerH} + env(safe-area-inset-top, 0px));
+  min-height: ${theme.sizes.headerH};
   padding-top: env(safe-area-inset-top, 0px);
   display: flex; align-items: center;
   justify-content: space-between; padding-left: 20px; padding-right: 20px;
   border-bottom: 1px solid ${theme.colors.gray200};
-  @media (min-width: ${theme.bp.pc}) { height: 64px; padding-top: 0; }
+  @media (min-width: ${theme.bp.pc}) { min-height: 64px; padding-top: 0; }
 `;
 const AppTitle = styled.h1`
   font-size: 17px; font-weight: 700; color: ${theme.colors.black}; letter-spacing: -0.3px;
@@ -104,8 +105,7 @@ const PcTabContent = styled.div`
   }
 `;
 const AppBody = styled.main`
-  flex: 1; position: relative; overflow: hidden;
-  @media (min-width: ${theme.bp.pc}) { height: 100dvh; }
+  flex: 1; position: relative; overflow: hidden; min-height: 0;
 `;
 const ViewMap = styled.div<{ $mobileHidden: boolean }>`
   position: absolute; inset: 0;

@@ -8,10 +8,17 @@ const globals = css`
     padding: 0;
     -webkit-tap-highlight-color: transparent;
   }
-  html, body, #root { height: 100%; }
+  html, body, #root {
+    height: 100%;
+    /* iOS PWA: 페이지 자체 스크롤 방지 */
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
   body {
     -webkit-font-smoothing: antialiased;
     font-family: -apple-system, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+    position: fixed;
+    width: 100%;
   }
 
   /* Kakao Maps: injected via className in MapView */
