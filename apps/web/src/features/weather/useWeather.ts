@@ -10,7 +10,8 @@ export function useWeather(location: GeoLocation | null) {
   const { data, isLoading, isValidating, mutate } = useSWR<WeatherData | null>(
     activeLoc ? ['weather', activeLoc.lat, activeLoc.lng] : null,
     ([, lat, lng]: [string, number, number]) => fetchWeather(lat, lng),
-    { refreshInterval: 5 * 60 * 1000, revalidateOnFocus: false },
+    // 자동 갱신 없음 — 새로고침 버튼으로만 재조회
+    { revalidateOnFocus: false, revalidateOnReconnect: false, revalidateIfStale: false },
   );
 
   function refresh(loc?: GeoLocation) {
