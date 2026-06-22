@@ -165,7 +165,7 @@ function AppLayout() {
 
   const { location, error: locError } = useLocationStore();
   const locationLabel = !location ? '위치 확인 중' : locError ? '서울 시청 기준' : '내 위치 기준';
-  const { weather, loading: wLoading, activeLoc, refresh: wRefresh } = useWeather(location);
+  const { weather, loading: wLoading, validating: wValidating, activeLoc, refresh: wRefresh } = useWeather(location);
   const { riverData, loading: rLoading, isMock, lastUpdated, refresh } = useRiverData();
   const { notices, loading: nLoading, lastUpdated: nUpdated, refresh: nRefresh } = useNotices();
 
@@ -224,7 +224,7 @@ function AppLayout() {
         <ViewMap $mobileHidden={activeTab !== 'map'}>
           <MapView location={location} riverData={riverData} moveToRef={moveToRef} getMapCenterRef={getMapCenterRef} />
           <WeatherFloat
-            weather={weather} loading={wLoading} location={activeLoc}
+            weather={weather} loading={wLoading} validating={wValidating} location={activeLoc}
             onRefresh={() => { const c = getMapCenterRef.current?.(); wRefresh(c ?? undefined); }}
           />
           <Legend>

@@ -7,7 +7,7 @@ export function useWeather(location: GeoLocation | null) {
   const [overrideLoc, setOverrideLoc] = useState<GeoLocation | null>(null);
   const activeLoc = overrideLoc ?? location;
 
-  const { data, isLoading, mutate } = useSWR<WeatherData | null>(
+  const { data, isLoading, isValidating, mutate } = useSWR<WeatherData | null>(
     activeLoc ? ['weather', activeLoc.lat, activeLoc.lng] : null,
     ([, lat, lng]: [string, number, number]) => fetchWeather(lat, lng),
     { refreshInterval: 5 * 60 * 1000, revalidateOnFocus: false },
@@ -18,5 +18,12 @@ export function useWeather(location: GeoLocation | null) {
     mutate();
   }
 
-  return { weather: data ?? null, loading: activeLoc === null || isLoading, activeLoc, refresh };
+  return {
+    weather: data ?? null,
+    loading: activeLoc === null || isLoading,
+    // 새로고침·자동 갱신 등 재조회 중 (기존 데이터 유무와 무관)
+    validating: activeLoc === null || isValidating,
+    activeLoc,
+    refresh,
+  };
 }

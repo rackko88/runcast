@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
+import { keyframes } from '@emotion/react';
 import { theme } from '@runcast/ui';
 import type { WeatherData } from '@/types';
 
@@ -58,6 +59,21 @@ const ToggleBtn = styled.button`
 
 const LocLabel = styled.div`font-size: 10px; color: ${theme.colors.gray400}; font-weight: 500; margin-bottom: 6px;`;
 
+/* 조회중 상태 */
+const spin = keyframes`to { transform: rotate(360deg); }`;
+const Loading = styled.div`
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; min-width: 120px;
+`;
+const Spinner = styled.span`
+  width: 14px; height: 14px; flex-shrink: 0;
+  border: 2px solid ${theme.colors.gray200};
+  border-top-color: ${theme.colors.blue};
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+`;
+const LoadingText = styled.span`font-size: 12px; color: ${theme.colors.gray600}; font-weight: 600;`;
+
 const RefreshBtn = styled.button`
   background: none; border: none; cursor: pointer;
   color: ${theme.colors.gray400}; font-size: 13px; padding: 0; line-height: 1;
@@ -67,6 +83,7 @@ const RefreshBtn = styled.button`
 interface Props {
   weather: WeatherData | null;
   loading: boolean;
+  validating?: boolean;
   location?: { lat: number; lng: number } | null;
   onRefresh?: () => void;
 }
@@ -85,7 +102,7 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
   } catch { return ''; }
 }
 
-export default function WeatherFloat({ weather, loading, location, onRefresh }: Props) {
+export default function WeatherFloat({ weather, loading, validating, location, onRefresh }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [areaName, setAreaName] = useState('');
 
@@ -94,7 +111,17 @@ export default function WeatherFloat({ weather, loading, location, onRefresh }: 
     reverseGeocode(location.lat, location.lng).then(setAreaName);
   }, [location?.lat, location?.lng]);
 
-  if (loading || !weather) return null;
+  // 영역은 항상 보여주고, 조회·갱신 중이면 "조회중" 표시 (새로고침 시에도 동일)
+  if (loading || validating || !weather) {
+    return (
+      <Card $alert={false}>
+        <Loading>
+          <Spinner />
+          <LoadingText>{weather ? '날씨 갱신중…' : '날씨 조회중…'}</LoadingText>
+        </Loading>
+      </Card>
+    );
+  }
 
   const isAlert = weather.isRaining || (weather.precipProbability ?? 0) >= 60;
   const grade = pmGrade(weather.pm10, weather.pm25);
