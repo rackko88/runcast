@@ -463,8 +463,8 @@ export default function WeatherDetail({ weather, loading, locationLabel, locatio
               </WeekIconWrap>
               <WeekRight>
                 <WeekTemps>
-                  <WeekMax>{d.tempMax}°</WeekMax>
-                  <WeekMin>/{d.tempMin}°</WeekMin>
+                  <WeekMin>{d.tempMin}°</WeekMin>
+                  <WeekMax>/{d.tempMax}°</WeekMax>
                 </WeekTemps>
                 <WeekRainWrap>
                   <WeekRainProb $show={d.precipProbabilityMax > 0}>
