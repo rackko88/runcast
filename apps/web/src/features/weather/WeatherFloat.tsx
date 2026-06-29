@@ -159,7 +159,7 @@ export default function WeatherFloat({ weather, loading, validating, location, o
               {onRefresh && <RefreshBtn onClick={onRefresh} title="지도 중심 기준 재조회">↻</RefreshBtn>}
               <ToggleBtn onClick={() => setCollapsed(true)}>▲</ToggleBtn>
             </div>
-            <Hum>💧{weather.humidity}% 습도</Hum>
+            <Hum>습도 {weather.humidity}%</Hum>
           </div>
         </FullHeader>
 
