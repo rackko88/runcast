@@ -203,12 +203,15 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
     const map = mapInst.current;
     const overlays: { setMap: (v: null) => void }[] = [];
 
-    const S = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">`;
     const ICON_SVG: Record<string, string> = {
-      '육상트랙': `${S}<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-      '한강코스': `${S}<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
-      '공원코스': `${S}<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`,
-      '산악코스': `${S}<path d="M3 20l5-8 4 4 4-4 6 8H3z"/></svg>`,
+      // 육상 트랙: 위에서 본 트랙 (스타디움 오벌)
+      '육상트랙': `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="6.5" width="20" height="11" rx="5.5"/><rect x="6.5" y="9.5" width="11" height="5" rx="2.5"/></svg>`,
+      // 한강 코스: 물결
+      '한강코스': `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7c.6.5 1.2 1 2.5 1C7 8 7 6 9.5 6c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 13c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 19c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`,
+      // 공원 코스: 소나무
+      '공원코스': `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7Z"/><path d="M12 22v-3"/></svg>`,
+      // 산악 코스: 산봉우리
+      '산악코스': `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-8 4 4 4-4 6 8H3z"/></svg>`,
     };
 
     RUNNING_SPOTS.forEach(spot => {
