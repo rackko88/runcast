@@ -77,7 +77,7 @@ async function fetchOpenMeteoFull(lat: number, lng: number) {
   const params = new URLSearchParams({
     latitude: String(lat), longitude: String(lng),
     current: 'temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m',
-    hourly: 'temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m',
+    hourly: 'temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m',
     daily: 'temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code,precipitation_probability_max,precipitation_sum,uv_index_max',
     forecast_days: '7', timezone: 'Asia/Seoul',
   });
@@ -111,6 +111,7 @@ async function fetchOpenMeteoFull(lat: number, lng: number) {
       hour: i % 24,
       temperature: Math.round(data.hourly.temperature_2m[i]),
       feelsLike: Math.round(data.hourly.apparent_temperature[i]),
+      humidity: Math.round(data.hourly.relative_humidity_2m[i] ?? 0),
       precipProbability: data.hourly.precipitation_probability[i] ?? 0,
       windSpeed: Math.round(data.hourly.wind_speed_10m[i] / 3.6 * 10) / 10,
       icon: WMO_ICON[hCode] ?? '🌡️',
@@ -127,15 +128,28 @@ async function fetchOpenMeteoFull(lat: number, lng: number) {
     uvIndex: Math.round(data.daily.uv_index_max[0] ?? 0),
   };
 
+  // 일자별 습도 평균 (시간별 상대습도 기준)
+  const humByDate: Record<string, { sum: number; n: number }> = {};
+  (data.hourly.time as string[]).forEach((t, i) => {
+    const h = data.hourly.relative_humidity_2m[i];
+    if (h == null) return;
+    const date = t.slice(0, 10);
+    (humByDate[date] ??= { sum: 0, n: 0 });
+    humByDate[date].sum += h;
+    humByDate[date].n += 1;
+  });
+
   // weekly (7 days)
   const weekly: DailyWeather[] = (data.daily.time as string[]).map((date, i) => {
     const dCode = data.daily.weather_code[i] as number;
     const d = new Date(date + 'T00:00:00');
+    const hum = humByDate[date];
     return {
       date,
       dayLabel: i === 0 ? '오늘' : i === 1 ? '내일' : DAY_LABELS[d.getDay()],
       tempMax: Math.round(data.daily.temperature_2m_max[i]),
       tempMin: Math.round(data.daily.temperature_2m_min[i]),
+      humidity: hum ? Math.round(hum.sum / hum.n) : 0,
       precipProbabilityMax: data.daily.precipitation_probability_max[i] ?? 0,
       precipSum: Math.round((data.daily.precipitation_sum[i] ?? 0) * 10) / 10,
       icon: WMO_ICON[dCode] ?? '🌡️',

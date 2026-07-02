@@ -276,6 +276,9 @@ const WeekMin = styled.span`font-size: 13px; color: #60a5fa;`;
 const WeekRainWrap = styled.div`display: flex; flex-direction: column; align-items: flex-end; min-width: 38px;`;
 const WeekRainProb = styled.span<{ $show: boolean }>`font-size: 11px; font-weight: 600; color: #3b82f6; opacity: ${p => p.$show ? 1 : 0};`;
 const WeekPrecip = styled.span<{ $show: boolean }>`font-size: 10px; color: ${theme.colors.gray400}; opacity: ${p => p.$show ? 1 : 0};`;
+const WeekHumid = styled.div`display: flex; align-items: center; gap: 3px; min-width: 48px; justify-content: flex-end;`;
+const WeekHumidLabel = styled.span`font-size: 10px; color: ${theme.colors.gray400};`;
+const WeekHumidVal = styled.span`font-size: 11px; font-weight: 600; color: #0ea5e9;`;
 
 // 대기질
 const AirSummary = styled.div`font-size: 18px; font-weight: 700; margin-bottom: 10px;`;
@@ -418,6 +421,7 @@ export default function WeatherDetail({ weather, loading, locationLabel, locatio
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>{hourLabel(h.hour, selectedHourIdx === 0)} 상세</div>
                 <div>날씨: {h.description}</div>
                 <div>체감온도: {h.feelsLike}°C</div>
+                <div>습도: {h.humidity}%</div>
                 <div>풍속: {h.windSpeed}m/s</div>
                 <div>강수확률: {h.precipProbability}%</div>
               </div>
@@ -466,9 +470,13 @@ export default function WeatherDetail({ weather, loading, locationLabel, locatio
                   <WeekMin>{d.tempMin}°</WeekMin>
                   <WeekMax>/{d.tempMax}°</WeekMax>
                 </WeekTemps>
+                <WeekHumid>
+                  <WeekHumidLabel>습도</WeekHumidLabel>
+                  <WeekHumidVal>{d.humidity}%</WeekHumidVal>
+                </WeekHumid>
                 <WeekRainWrap>
                   <WeekRainProb $show={d.precipProbabilityMax > 0}>
-                    {d.precipProbabilityMax > 0 ? `🌂${d.precipProbabilityMax}%` : ''}
+                    {d.precipProbabilityMax > 0 ? `🌂강수 ${d.precipProbabilityMax}%` : ''}
                   </WeekRainProb>
                   <WeekPrecip $show={d.precipSum > 0}>
                     {d.precipSum > 0 ? `${d.precipSum}mm` : ''}

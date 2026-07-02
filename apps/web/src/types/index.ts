@@ -7,6 +7,7 @@ export interface HourlyWeather {
   hour: number;
   temperature: number;
   feelsLike: number;
+  humidity: number;
   precipProbability: number;
   windSpeed: number;
   icon: string;
@@ -18,6 +19,7 @@ export interface DailyWeather {
   dayLabel: string;
   tempMax: number;
   tempMin: number;
+  humidity: number;
   precipProbabilityMax: number;
   precipSum: number;
   icon: string;
