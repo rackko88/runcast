@@ -255,6 +255,13 @@ const HourRainLabel = styled.span<{ $now: boolean }>`
   font-size: 9px; color: ${p => p.$now ? 'rgba(255,255,255,0.4)' : theme.colors.gray400};
   opacity: inherit;
 `;
+const HourHumid = styled.span<{ $now: boolean }>`
+  font-size: 10px; font-weight: 600;
+  color: ${p => p.$now ? '#7dd3fc' : '#0ea5e9'};
+`;
+const HourHumidLabel = styled.span<{ $now: boolean }>`
+  font-size: 9px; color: ${p => p.$now ? 'rgba(255,255,255,0.4)' : theme.colors.gray400};
+`;
 
 // 주간 예보
 const WeekRow = styled.div`
@@ -408,6 +415,10 @@ export default function WeatherDetail({ weather, loading, locationLabel, locatio
                       {h.precipProbability > 0 ? `${h.precipProbability}%` : '-'}
                     </HourRain>
                     <HourRainLabel $now={isNow}>강수</HourRainLabel>
+                  </HourRainWrap>
+                  <HourRainWrap>
+                    <HourHumid $now={isNow}>{h.humidity}%</HourHumid>
+                    <HourHumidLabel $now={isNow}>습도</HourHumidLabel>
                   </HourRainWrap>
                 </HourCell>
               );
