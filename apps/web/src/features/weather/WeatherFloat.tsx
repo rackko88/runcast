@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { theme } from '@runcast/ui';
@@ -57,7 +57,8 @@ const ToggleBtn = styled.button`
   line-height: 1; flex-shrink: 0; margin-top: 2px;
 `;
 
-const LocLabel = styled.div`font-size: 10px; color: ${theme.colors.gray400}; font-weight: 500; margin-bottom: 6px;`;
+const LocLabel = styled.div`font-size: 10px; color: ${theme.colors.gray400}; font-weight: 500; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;`;
+const DoneTag = styled.span`font-size: 10px; font-weight: 700; color: ${theme.colors.green};`;
 
 /* 조회중 상태 */
 const spin = keyframes`to { transform: rotate(360deg); }`;
@@ -111,6 +112,19 @@ export default function WeatherFloat({ weather, loading, validating, location, o
     reverseGeocode(location.lat, location.lng).then(setAreaName);
   }, [location?.lat, location?.lng]);
 
+  // 갱신(validating) 이 끝나는 순간 "✓ 갱신됨" 을 잠시 표시
+  const prevValidating = useRef(false);
+  const [justDone, setJustDone] = useState(false);
+  useEffect(() => {
+    const was = prevValidating.current;
+    prevValidating.current = !!validating;
+    if (was && !validating && weather) {
+      setJustDone(true);
+      const t = setTimeout(() => setJustDone(false), 1800);
+      return () => clearTimeout(t);
+    }
+  }, [validating, weather]);
+
   // 영역은 항상 보여주고, 조회·갱신 중이면 "조회중" 표시 (새로고침 시에도 동일)
   if (loading || validating || !weather) {
     return (
@@ -142,7 +156,12 @@ export default function WeatherFloat({ weather, loading, validating, location, o
   return (
     <Card $alert={isAlert}>
       <Full>
-        {areaName && <LocLabel>📍 {areaName}</LocLabel>}
+        {(areaName || justDone) && (
+          <LocLabel>
+            {areaName && <span>📍 {areaName}</span>}
+            {justDone && <DoneTag>✓ 갱신됨</DoneTag>}
+          </LocLabel>
+        )}
         <FullHeader>
           <FullLeft>
             <BigIcon>{weather.icon}</BigIcon>
