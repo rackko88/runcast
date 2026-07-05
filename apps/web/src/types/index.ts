@@ -74,5 +74,6 @@ export interface Notice {
   date: string;
   url?: string;
   isEmergency: boolean;
+  isNew?: boolean;
   content?: string | null;
 }

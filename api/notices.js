@@ -117,9 +117,9 @@ function parseNotices(html, baseUrl, label, color) {
 async function fetchSource(src) {
   const html = await fetchHtml(src.url, src.encoding);
   const notices = parseNotices(html, src.baseUrl, src.label, src.color);
-  // 각 공지 본문을 병렬로 fetch (최대 10개)
+  // 각 공지 본문을 병렬로 fetch (최근 1주일 노출 대비 최대 15개)
   const withContent = await Promise.all(
-    notices.slice(0, 10).map(async n => ({
+    notices.slice(0, 15).map(async n => ({
       ...n,
       content: await fetchNoticeContent(n.url, src.url),
     }))
@@ -147,8 +147,23 @@ export default async function handler(req, res) {
   const seoulNow = new Date(new Date().toLocaleString('en', { timeZone: 'Asia/Seoul' }));
   const todayStr = `${seoulNow.getFullYear()}.${String(seoulNow.getMonth()+1).padStart(2,'0')}.${String(seoulNow.getDate()).padStart(2,'0')}`;
 
-  const todayNotices = notices.filter(n => !n.date || n.date === todayStr || n.date.startsWith(todayStr));
-  const filtered = todayNotices.length > 0 ? todayNotices : notices.slice(0, 10);
+  // "YYYY.MM.DD" → Date (자정 기준), 파싱 불가 시 null
+  const parseDate = (d) => {
+    const m = d && d.match(/(\d{4})\.(\d{2})\.(\d{2})/);
+    return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+  };
+  const today = new Date(seoulNow.getFullYear(), seoulNow.getMonth(), seoulNow.getDate());
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 6); // 오늘 포함 최근 7일
+
+  // 당일 등록 표시 + 최근 1주일치만 노출
+  notices.forEach(n => { n.isNew = n.date === todayStr; });
+  const weekNotices = notices.filter(n => {
+    const dt = parseDate(n.date);
+    if (!dt) return true; // 날짜 미상 항목은 유지
+    return dt >= weekAgo && dt <= today;
+  });
+  const filtered = weekNotices.length > 0 ? weekNotices : notices.slice(0, 10);
 
   filtered.sort((a, b) => {
     if (a.isEmergency !== b.isEmergency) return a.isEmergency ? -1 : 1;
