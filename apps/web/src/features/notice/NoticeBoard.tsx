@@ -39,6 +39,11 @@ const Item = styled.li<{ $emergency: boolean }>`
 `;
 const SkeletonItem = styled.div`height: 38px; border-radius: 8px; background: ${theme.colors.gray100}; animation: ${shimmer} 1.4s infinite; margin-bottom: 4px;`;
 const Source = styled.span<{ $bg?: string }>`flex-shrink: 0; font-size: 10px; font-weight: 700; color: #fff; padding: 2px 7px; border-radius: 5px; line-height: 1.6; background: ${p => p.$bg ?? theme.colors.gray400};`;
+const NewBadge = styled.span`
+  flex-shrink: 0; font-size: 9px; font-weight: 800; color: #fff;
+  background: ${theme.colors.blue}; padding: 1px 5px; border-radius: 5px;
+  letter-spacing: 0.3px; line-height: 1.6;
+`;
 const Title = styled.span<{ $emergency: boolean }>`flex: 1; font-size: 12px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ${p => p.$emergency ? theme.colors.red : theme.colors.gray800}; font-weight: ${p => p.$emergency ? 600 : 400};`;
 const DateLabel = styled.span`flex-shrink: 0; font-size: 10px; color: ${theme.colors.gray400}; white-space: nowrap;`;
 const Empty = styled.div`font-size: 12px; color: ${theme.colors.gray400}; text-align: center; padding: 24px 0;`;
@@ -129,6 +134,7 @@ export default function NoticeBoard({ notices, loading, lastUpdated, onRefresh }
               <Item key={i} $emergency={n.isEmergency}>
                 <button onClick={() => setSelected(n)}>
                   <Source $bg={n.color}>{n.source}</Source>
+                  {n.isNew && <NewBadge>NEW</NewBadge>}
                   <Title $emergency={n.isEmergency}>{n.title}</Title>
                   {n.date && <DateLabel>{n.date}</DateLabel>}
                 </button>
