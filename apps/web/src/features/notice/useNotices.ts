@@ -23,6 +23,7 @@ export function useNotices() {
     notices: data?.notices ?? [],
     loading: isLoading,
     lastUpdated: data?.updatedAt ? new Date(data.updatedAt) : null,
-    refresh: mutate,
+    // 인자 없이 재검증만 수행 (onClick 이벤트 객체가 mutate로 넘어가 캐시를 덮어쓰는 것 방지)
+    refresh: () => mutate(),
   };
 }
