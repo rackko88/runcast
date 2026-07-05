@@ -37,6 +37,7 @@ export function useRiverData() {
     loading: isLoading,
     isMock,
     lastUpdated: data?.fetchedAt ?? null,
-    refresh: mutate,
+    // 인자 없이 재검증만 수행 (onClick 등에서 이벤트 객체가 mutate로 넘어가 캐시를 덮어쓰는 것 방지)
+    refresh: () => mutate(),
   };
 }
