@@ -2,9 +2,11 @@ import { useState } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { theme } from '@runcast/ui';
+import { useRefreshFeedback } from '@/shared/useRefreshFeedback';
 import type { Notice } from '@/types';
 
 const shimmer = keyframes`0%,100%{opacity:.5} 50%{opacity:1}`;
+const spin = keyframes`to { transform: rotate(360deg); }`;
 const fadeIn  = keyframes`from{opacity:0} to{opacity:1}`;
 const slideUp = keyframes`from{transform:translateY(100%)} to{transform:translateY(0)}`;
 
@@ -14,7 +16,17 @@ const BoardHeader = styled.div`display: flex; align-items: center; justify-conte
 const BoardTitle = styled.span`font-size: 11px; font-weight: 700; color: ${theme.colors.gray400}; letter-spacing: 0.5px; text-transform: uppercase;`;
 const BoardMeta = styled.div`display: flex; align-items: center; gap: 6px;`;
 const UpdateTime = styled.span`font-size: 11px; color: ${theme.colors.gray400};`;
-const RefreshBtn = styled.button`background: ${theme.colors.gray100}; border: none; color: ${theme.colors.gray800}; width: 28px; height: 28px; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;`;
+const RefreshBtn = styled.button`background: ${theme.colors.gray100}; border: none; color: ${theme.colors.gray800}; width: 28px; height: 28px; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  &:disabled { cursor: default; opacity: 0.7; }
+`;
+const RefreshIcon = styled.span<{ $spin: boolean }>`
+  display: inline-block; line-height: 1;
+  animation: ${p => p.$spin ? spin : 'none'} 0.7s linear infinite;
+`;
+const DoneTag = styled.span`
+  font-size: 10px; font-weight: 700; color: ${theme.colors.green};
+  background: #E7F9F0; padding: 2px 7px; border-radius: 6px;
+`;
 const List = styled.ul`list-style: none; display: flex; flex-direction: column; gap: 2px;`;
 const Item = styled.li<{ $emergency: boolean }>`
   a, button {
@@ -81,11 +93,12 @@ interface Props {
   notices: Notice[];
   loading: boolean;
   lastUpdated: Date | null;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<unknown>;
 }
 
 export default function NoticeBoard({ notices, loading, lastUpdated, onRefresh }: Props) {
   const [selected, setSelected] = useState<Notice | null>(null);
+  const { refreshing, justDone, handleRefresh } = useRefreshFeedback(onRefresh);
 
   return (
     <>
@@ -93,10 +106,16 @@ export default function NoticeBoard({ notices, loading, lastUpdated, onRefresh }
         <BoardHeader>
           <BoardTitle>공지사항</BoardTitle>
           <BoardMeta>
-            {lastUpdated && (
+            {refreshing ? (
+              <UpdateTime>갱신 중…</UpdateTime>
+            ) : justDone ? (
+              <DoneTag>✓ 갱신됨</DoneTag>
+            ) : lastUpdated && (
               <UpdateTime>{lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</UpdateTime>
             )}
-            <RefreshBtn onClick={onRefresh}>↻</RefreshBtn>
+            <RefreshBtn onClick={handleRefresh} disabled={refreshing} title="새로고침">
+              <RefreshIcon $spin={refreshing}>↻</RefreshIcon>
+            </RefreshBtn>
           </BoardMeta>
         </BoardHeader>
 

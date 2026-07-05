@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { theme } from '@runcast/ui';
 import { RIVER_COLORS } from './rivers';
+import { useRefreshFeedback } from '@/shared/useRefreshFeedback';
 import type { RiverStation, RiverStatus } from '@/types';
 
 const shimmer = keyframes`0%,100%{opacity:.5} 50%{opacity:1}`;
@@ -109,21 +110,7 @@ interface Props {
 
 export default function RiverDetail({ riverData, loading, isMock, lastUpdated, onRefresh, onStationClick }: Props) {
   const [activeRegion, setActiveRegion] = useState('서울');
-  const [refreshing, setRefreshing] = useState(false);
-  const [justDone, setJustDone] = useState(false);
-
-  async function handleRefresh() {
-    if (refreshing) return;
-    setJustDone(false);
-    setRefreshing(true);
-    try {
-      await Promise.resolve(onRefresh());
-    } finally {
-      setRefreshing(false);
-      setJustDone(true);
-      setTimeout(() => setJustDone(false), 1800);
-    }
-  }
+  const { refreshing, justDone, handleRefresh } = useRefreshFeedback(onRefresh);
 
   const allowedRivers = REGION_RIVERS[activeRegion] ?? [];
   const filtered = riverData.filter(s => allowedRivers.includes(s.river));
