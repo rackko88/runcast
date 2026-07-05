@@ -6,6 +6,7 @@ import { RIVER_COLORS } from './rivers';
 import type { RiverStation, RiverStatus } from '@/types';
 
 const shimmer = keyframes`0%,100%{opacity:.5} 50%{opacity:1}`;
+const spin = keyframes`to { transform: rotate(360deg); }`;
 
 const REGION_RIVERS: Record<string, string[]> = {
   '서울': ['한강', '청계천', '중랑천', '안양천', '탄천'],
@@ -26,7 +27,17 @@ const Header = styled.div`display: flex; align-items: center; justify-content: s
 const Meta = styled.div`display: flex; align-items: center; gap: 8px;`;
 const Time = styled.span`font-size: 11px; color: ${theme.colors.gray400};`;
 const MockTag = styled.span`background: #FFF3CD; color: #856404; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px;`;
-const RefreshBtn = styled.button`background: ${theme.colors.gray100}; border: none; color: ${theme.colors.gray800}; width: 28px; height: 28px; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;`;
+const RefreshBtn = styled.button`background: ${theme.colors.gray100}; border: none; color: ${theme.colors.gray800}; width: 28px; height: 28px; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  &:disabled { cursor: default; opacity: 0.7; }
+`;
+const RefreshIcon = styled.span<{ $spin: boolean }>`
+  display: inline-block; line-height: 1;
+  animation: ${p => p.$spin ? spin : 'none'} 0.7s linear infinite;
+`;
+const DoneTag = styled.span`
+  font-size: 10px; font-weight: 700; color: ${theme.colors.green};
+  background: #E7F9F0; padding: 2px 7px; border-radius: 6px;
+`;
 
 const Cards = styled.div`
   display: flex; gap: 10px; padding-bottom: 16px;
@@ -92,12 +103,28 @@ interface Props {
   loading: boolean;
   isMock: boolean;
   lastUpdated: Date | null;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<unknown>;
   onStationClick?: (lat: number, lng: number) => void;
 }
 
 export default function RiverDetail({ riverData, loading, isMock, lastUpdated, onRefresh, onStationClick }: Props) {
   const [activeRegion, setActiveRegion] = useState('서울');
+  const [refreshing, setRefreshing] = useState(false);
+  const [justDone, setJustDone] = useState(false);
+
+  async function handleRefresh() {
+    if (refreshing) return;
+    setJustDone(false);
+    setRefreshing(true);
+    try {
+      await Promise.resolve(onRefresh());
+    } finally {
+      setRefreshing(false);
+      setJustDone(true);
+      setTimeout(() => setJustDone(false), 1800);
+    }
+  }
+
   const allowedRivers = REGION_RIVERS[activeRegion] ?? [];
   const filtered = riverData.filter(s => allowedRivers.includes(s.river));
   const grouped = groupByRiver(filtered);
@@ -107,11 +134,17 @@ export default function RiverDetail({ riverData, loading, isMock, lastUpdated, o
       <Header>
         <Meta>
           {isMock && <MockTag>샘플</MockTag>}
-          {lastUpdated && (
+          {refreshing ? (
+            <Time>갱신 중…</Time>
+          ) : justDone ? (
+            <DoneTag>✓ 갱신됨</DoneTag>
+          ) : lastUpdated && (
             <Time>{lastUpdated.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 기준</Time>
           )}
         </Meta>
-        <RefreshBtn onClick={onRefresh}>↻</RefreshBtn>
+        <RefreshBtn onClick={handleRefresh} disabled={refreshing} title="새로고침">
+          <RefreshIcon $spin={refreshing}>↻</RefreshIcon>
+        </RefreshBtn>
       </Header>
 
       <RegionTabs>
