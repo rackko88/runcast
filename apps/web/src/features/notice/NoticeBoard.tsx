@@ -41,7 +41,7 @@ const SkeletonItem = styled.div`height: 38px; border-radius: 8px; background: ${
 const Source = styled.span<{ $bg?: string }>`flex-shrink: 0; font-size: 10px; font-weight: 700; color: #fff; padding: 2px 7px; border-radius: 5px; line-height: 1.6; background: ${p => p.$bg ?? theme.colors.gray400};`;
 const NewBadge = styled.span`
   flex-shrink: 0; font-size: 9px; font-weight: 800; color: #fff;
-  background: ${theme.colors.purple}; padding: 1px 5px; border-radius: 5px;
+  background: #EC4899; padding: 1px 5px; border-radius: 5px;
   letter-spacing: 0.3px; line-height: 1.6;
 `;
 const Title = styled.span<{ $emergency: boolean }>`flex: 1; font-size: 12px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: ${p => p.$emergency ? theme.colors.red : theme.colors.gray800}; font-weight: ${p => p.$emergency ? 600 : 400};`;
