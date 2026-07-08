@@ -103,14 +103,32 @@ export const ALL_RIVERS = Array.from(
 
 const CLOSURE_KEYWORDS = ['통제', '차단', '폐쇄', '출입금지', '접근금지', '통행제한'];
 
-/** 통제/폐쇄 성격의 공지에서 하천명을 추출. '해제' 공지는 제외. */
-export function controlledRiversFromNotices(notices: { title: string }[]): Set<string> {
-  const set = new Set<string>();
+/**
+ * 공지 기반으로 통제 중인 하천명 집합을 계산.
+ * 하천별로 "최신 공지가 이긴다":
+ *  - '해제' 가 포함되면 그 하천은 정상(열림)으로 처리
+ *  - 통제/폐쇄 키워드면 통제
+ *  - 날짜(YYYY.MM.DD)가 더 최신인 공지를 우선, 같은 날이면 '해제'를 우선
+ */
+export function controlledRiversFromNotices(notices: { title: string; date?: string }[]): Set<string> {
+  const byRiver = new Map<string, { date: string; closed: boolean }>();
   for (const n of notices) {
     const t = n.title ?? '';
-    if (t.includes('해제')) continue;                      // 통제 해제 → 제외
-    if (!CLOSURE_KEYWORDS.some(k => t.includes(k))) continue;
-    for (const river of ALL_RIVERS) if (t.includes(river)) set.add(river);
+    const isRelease = t.includes('해제');
+    const isClosure = CLOSURE_KEYWORDS.some(k => t.includes(k));
+    if (!isRelease && !isClosure) continue;         // 통제/해제와 무관한 공지
+    const closed = !isRelease;                       // 해제면 열림, 아니면 통제
+    const date = n.date ?? '';
+    for (const river of ALL_RIVERS) {
+      if (!t.includes(river)) continue;
+      const prev = byRiver.get(river);
+      // 더 최신이거나, 같은 날이면 해제(closed=false)를 우선 반영
+      if (!prev || date > prev.date || (date === prev.date && !closed)) {
+        byRiver.set(river, { date, closed });
+      }
+    }
   }
+  const set = new Set<string>();
+  for (const [river, v] of byRiver) if (v.closed) set.add(river);
   return set;
 }
