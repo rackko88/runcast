@@ -114,11 +114,12 @@ const PopupLink = styled.a`
 interface Props {
   location: { lat: number; lng: number } | null;
   riverData: RiverStation[];
+  controlledRivers?: Set<string>;
   moveToRef?: React.MutableRefObject<((lat: number, lng: number) => void) | null>;
   getMapCenterRef?: React.MutableRefObject<(() => { lat: number; lng: number } | null) | null>;
 }
 
-export default function MapView({ location, riverData, moveToRef, getMapCenterRef }: Props) {
+export default function MapView({ location, riverData, controlledRivers, moveToRef, getMapCenterRef }: Props) {
   const mapRef  = useRef<HTMLDivElement>(null);
   const mapInst = useRef<unknown>(null);
   const [mapReady, setMapReady]     = useState(false);
@@ -172,7 +173,8 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
     const polylines: { setMap: (v: null) => void }[] = [];
 
     Object.entries(RIVER_PATHS).forEach(([name, coords]) => {
-      const status = getRiverStatus(name, riverData);
+      // 수위 기반 상태와 공지 기반 통제 중 더 심각한 쪽으로 표시
+      const status = controlledRivers?.has(name) ? '통제' : getRiverStatus(name, riverData);
       const color  = RIVER_COLORS[status];
       const path   = coords.map(([la, ln]) => new K.LatLng(la, ln));
       const line = new K.Polyline({ map, path, strokeWeight: name === '한강' ? 5 : 3, strokeColor: color, strokeOpacity: 0.85, strokeStyle: 'solid' });
@@ -194,7 +196,7 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
     });
 
     return () => { polylines.forEach(p => p.setMap(null)); overlays.forEach(o => o.setMap(null)); };
-  }, [mapReady, riverData]);
+  }, [mapReady, riverData, controlledRivers]);
 
   // ── 러닝 스팟 마커 ──
   useEffect(() => {
@@ -276,6 +278,11 @@ export default function MapView({ location, riverData, moveToRef, getMapCenterRe
               </span>
             </PopupRow>
           ))}
+          {popup.stations.length === 0 && (
+            <PopupMeta>
+              수위 관측소 없음{popup.status === '통제' ? ' · 공지 기준 통제' : ''}
+            </PopupMeta>
+          )}
           <div style={{ fontSize: 10, color: '#B0B8C1', marginTop: 8, textAlign: 'right' }}>닫기 ✕</div>
         </>
       );

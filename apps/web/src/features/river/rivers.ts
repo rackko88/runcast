@@ -94,3 +94,23 @@ export function getStatusFromLevel(
   if (waterLevel >= warnLevel * 0.8)   return '주의';
   return '정상';
 }
+
+// ── 공지 기반 통제 판정 ──
+// 지도에 그려지는 하천 + 관측소가 있는 하천 전체 이름
+export const ALL_RIVERS = Array.from(
+  new Set([...Object.keys(RIVER_PATHS), ...STATIONS.map(s => s.river)]),
+);
+
+const CLOSURE_KEYWORDS = ['통제', '차단', '폐쇄', '출입금지', '접근금지', '통행제한'];
+
+/** 통제/폐쇄 성격의 공지에서 하천명을 추출. '해제' 공지는 제외. */
+export function controlledRiversFromNotices(notices: { title: string }[]): Set<string> {
+  const set = new Set<string>();
+  for (const n of notices) {
+    const t = n.title ?? '';
+    if (t.includes('해제')) continue;                      // 통제 해제 → 제외
+    if (!CLOSURE_KEYWORDS.some(k => t.includes(k))) continue;
+    for (const river of ALL_RIVERS) if (t.includes(river)) set.add(river);
+  }
+  return set;
+}
