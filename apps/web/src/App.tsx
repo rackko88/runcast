@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { BrowserRouter, Routes, Route, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -18,7 +18,7 @@ import { useLocationStore } from '@/stores/locationStore';
 import { useWeather } from '@/features/weather/useWeather';
 import { useRiverData } from '@/features/river/useRiverData';
 import { useNotices } from '@/features/notice/useNotices';
-import { RIVER_COLORS } from '@/features/river/rivers';
+import { RIVER_COLORS, controlledRiversFromNotices } from '@/features/river/rivers';
 
 const pulse = keyframes`0%,100%{opacity:1} 50%{opacity:.7}`;
 
@@ -169,6 +169,7 @@ function AppLayout() {
   const { riverData, loading: rLoading, isMock, lastUpdated, refresh } = useRiverData();
   const { notices, loading: nLoading, lastUpdated: nUpdated, refresh: nRefresh } = useNotices();
 
+  const controlledRivers = useMemo(() => controlledRiversFromNotices(notices), [notices]);
   const alertCount = riverData.filter(s => ['통제', '위험'].includes(s.status)).length;
   const seoulNow = new Date(new Date().toLocaleString('en', { timeZone: 'Asia/Seoul' }));
   const todayKey = `${seoulNow.getFullYear()}.${String(seoulNow.getMonth()+1).padStart(2,'0')}.${String(seoulNow.getDate()).padStart(2,'0')}`;
@@ -222,7 +223,7 @@ function AppLayout() {
 
       <AppBody>
         <ViewMap $mobileHidden={activeTab !== 'map'}>
-          <MapView location={location} riverData={riverData} moveToRef={moveToRef} getMapCenterRef={getMapCenterRef} />
+          <MapView location={location} riverData={riverData} controlledRivers={controlledRivers} moveToRef={moveToRef} getMapCenterRef={getMapCenterRef} />
           <WeatherFloat
             weather={weather} loading={wLoading} validating={wValidating} location={activeLoc}
             onRefresh={() => { const c = getMapCenterRef.current?.(); wRefresh(c ?? undefined); }}
