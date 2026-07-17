@@ -170,14 +170,21 @@ function AppLayout() {
   const { notices, loading: nLoading, lastUpdated: nUpdated, refresh: nRefresh } = useNotices();
 
   const controlledRivers = useMemo(() => controlledRiversFromNotices(notices), [notices]);
-  const alertCount = riverData.filter(s => ['통제', '위험'].includes(s.status)).length;
+  // 통제 공지가 있는 하천은 관측소 상태도 통제로 조정 (지도·목록·헤더 일관성)
+  const adjustedRiverData = useMemo(
+    () => controlledRivers.size === 0
+      ? riverData
+      : riverData.map(s => controlledRivers.has(s.river) ? { ...s, status: '통제' as const } : s),
+    [riverData, controlledRivers],
+  );
+  const alertCount = adjustedRiverData.filter(s => ['통제', '위험'].includes(s.status)).length;
   const seoulNow = new Date(new Date().toLocaleString('en', { timeZone: 'Asia/Seoul' }));
   const todayKey = `${seoulNow.getFullYear()}.${String(seoulNow.getMonth()+1).padStart(2,'0')}.${String(seoulNow.getDate()).padStart(2,'0')}`;
   const hasEmergency = notices.some(n => n.isEmergency && n.date === todayKey);
 
   function sidebarContent(tab: string) {
     switch (tab) {
-      case 'river':   return <RiverDetail riverData={riverData} loading={rLoading} isMock={isMock} lastUpdated={lastUpdated} onRefresh={refresh} onStationClick={(lat, lng) => { moveToRef.current?.(lat, lng); navigate('/'); }} />;
+      case 'river':   return <RiverDetail riverData={adjustedRiverData} loading={rLoading} isMock={isMock} lastUpdated={lastUpdated} onRefresh={refresh} onStationClick={(lat, lng) => { moveToRef.current?.(lat, lng); navigate('/'); }} />;
       case 'notice':  return <NoticeBoard notices={notices} loading={nLoading} lastUpdated={nUpdated} onRefresh={nRefresh} />;
       case 'weather': return <WeatherDetail weather={weather} loading={wLoading} locationLabel={locationLabel} location={activeLoc} />;
 
@@ -185,7 +192,7 @@ function AppLayout() {
     }
   }
 
-  const ctx = { weather, wLoading, locationLabel, riverData, rLoading, isMock, lastUpdated, refresh, notices, nLoading, nUpdated, nRefresh, moveToRef };
+  const ctx = { weather, wLoading, locationLabel, riverData: adjustedRiverData, rLoading, isMock, lastUpdated, refresh, notices, nLoading, nUpdated, nRefresh, moveToRef };
 
   return (
     <AppRoot>
@@ -223,7 +230,7 @@ function AppLayout() {
 
       <AppBody>
         <ViewMap $mobileHidden={activeTab !== 'map'}>
-          <MapView location={location} riverData={riverData} controlledRivers={controlledRivers} moveToRef={moveToRef} getMapCenterRef={getMapCenterRef} />
+          <MapView location={location} riverData={adjustedRiverData} controlledRivers={controlledRivers} moveToRef={moveToRef} getMapCenterRef={getMapCenterRef} />
           <WeatherFloat
             weather={weather} loading={wLoading} validating={wValidating} location={activeLoc}
             onRefresh={() => { const c = getMapCenterRef.current?.(); wRefresh(c ?? undefined); }}
